@@ -7,7 +7,7 @@ output: html_document
 
 
 #Imani 
-
+my_function <- function(x){x^3}
 
 #Shiva
 
