@@ -1,0 +1,16 @@
+---
+title: "EDA"
+author: ""
+date: "June 14, 2018"
+output: html_document
+---
+
+
+#Imani 
+
+
+#Shiva
+
+
+#Michael 
+
