@@ -10,6 +10,9 @@ output: html_document
 
 
 #Shiva
+```{r}
+cube_x <- function(x) x^3
+```
 
 
 #Michael 
