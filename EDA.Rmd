@@ -13,4 +13,8 @@ output: html_document
 
 
 #Michael 
+```{r}
+cubic_x <- function(x){x^3}
+```
+
 
