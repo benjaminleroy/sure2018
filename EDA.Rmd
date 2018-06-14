@@ -7,6 +7,9 @@ output: html_document
 
 
 #Imani 
+```{r}
+my_function <- function(x){x^3}
+```
 
 
 #Shiva
@@ -16,4 +19,8 @@ cube_x <- function(x) x^3
 
 
 #Michael 
+```{r}
+cubic_x <- function(x){x^3}
+```
+
 
