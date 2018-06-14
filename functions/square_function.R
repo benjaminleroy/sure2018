@@ -1,1 +1,1 @@
-square_x <- function(x){x^2}
+cube_x <- function (x) {x^3}
