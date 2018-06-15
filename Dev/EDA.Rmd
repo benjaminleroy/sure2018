@@ -7,7 +7,9 @@ output: html_document
 
 #Reading in the data
 ```{r}
-sure_path <- '/Users/shiva/code/CMU/sure2018'
+library(tidyverse)
+
+sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
 individual_path <- paste(sure_path, "/data/individual_database.csv", sep = "")
 individual <- read_csv(individual_path, 
                        col_types = cols(X1 = col_skip(), 
@@ -87,8 +89,80 @@ my_function <- function(x){x^3}
 
 #Shiva
 ```{r}
-cube_x <- function(x) x^3
+#
+ggplot(data = individual, aes(x = ageBroad, fill = gender)) + 
+  geom_bar(position = "fill") + facet_wrap(~individual$isSexualExploit) + 
+  labs(title = "Gender and Age Faceted by isSexualExploit", x = "Age Range", 
+       y = "proportion") + 
+  theme(axis.text.x = element_text(size = 10, angle = 90), 
+        plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+ggplot(data = individual, aes(x = ageBroad, fill = gender)) + 
+  geom_bar(position = "fill") + facet_wrap(~individual$isForcedLabour) + 
+  labs(title = "Gender and Age Faceted by isForcedLabour", x = "Age Range", 
+       y = "proportion") + 
+  theme(axis.text.x = element_text(size = 10, angle = 90), 
+        plot.title = element_text(face = "bold", hjust = 0.5))
+
+
+
+#Combines country GDP and Poverty rates from 1990-2016 into a data frame
+country_GDPvPoverty <- data.frame("Country" = character(), "Year" = integer(), 
+                                  "Poverty" = double(),
+                                  "GDP" = double())
+for (i in 1:nrow(country)){
+  for (j in 1990:2016) {
+    new_row <- data.frame(base::rbind(c(country[i, 1], j, country[i, j-1958],
+                                        country[i, j-1887])))
+    names(new_row) <- names(country_GDPvPoverty)
+    country_GDPvPoverty <- base::rbind(country_GDPvPoverty, new_row)
+  }
+}
+
+country_GDPvPoverty$Country <- as.character(country_GDPvPoverty$Country)
+country_GDPvPoverty$Year <- as.integer(country_GDPvPoverty$Year)
+country_GDPvPoverty$Poverty <- as.double(country_GDPvPoverty$Poverty)
+country_GDPvPoverty$GDP <- as.double(country_GDPvPoverty$GDP)
+
+model <- lm(Poverty ~ log10(GDP), data = country_GDPvPoverty)
+
+ggplot(data = country_GDPvPoverty, aes(x = GDP, y = Poverty, color = Year)) + 
+  geom_abline(slope = coef(model)[2], intercept = coef(model)[1], size = 1) + 
+  geom_point() + geom_smooth(method = 'lm') + scale_x_log10() + 
+  scale_colour_gradientn(colours=rainbow(4)) +
+  labs(title = "Poverty Rate vs Log10(GDP) from 1990 to 2016") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5))
+
+#producing the heatmap of missingness correlations
+library(stats)
+source(paste(sure_path, '/functions/na_mat.R', sep = ''))
+
+
+na_cor0 <- na_mat(individual)[[3]]
+stats::heatmap(na_cor0)
+
+individual_filled_in <- individual
+#filling in the NAs with zeros in the means of control (9:26), type of 
+#exploitation (27:33), and recuiter relationship (54:58) groups of variables 
+#where at least one variable in each row of each group has a 1 
+
+for(j in list(9:26, 27:33, 54:58)) {
+  for (i in 1:nrow(individual_filled_in[,j])){
+    if (sum(individual_filled_in[i,j], na.rm = TRUE)>0){
+      individual_filled_in[i,j][as.vector(is.na(individual_filled_in[i,j]))]<-0
+    }
+  }
+}
+
+#heatmap after filling in some of the NAs
+na_cor1 <- na_mat(individual_filled_in)[[3]]
+stats::heatmap(na_cor1)
+
 ```
+
+
+
 
 
 #Michael 
