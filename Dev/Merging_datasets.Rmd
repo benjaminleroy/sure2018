@@ -1,0 +1,95 @@
+---
+title: "Merging Datasets"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
+individual_path <- paste(sure_path, "/data/individual_database.csv", sep = "")
+individual <- read_csv(individual_path, 
+                       col_types = cols(X1 = col_skip(), 
+                                        meansOfControlRestrictsFinancialAccess = col_integer(), 
+                                        meansOfControlSexualAbuse = col_integer(), 
+                                        meansOfControlUsesChildren = col_integer(), 
+                                        typeOfSexPornography = col_integer(), 
+                                        typeOfSexRemoteInteractiveServices = col_integer(), 
+                                        typeOfSexPrivateSexualServices = col_integer()))
+
+#converts year of registration and ageBroad into ordered factors
+individual$yearOfRegistration <- as.ordered(individual$yearOfRegistration)
+individual$ageBroad <- as.ordered(individual$ageBroad)
+individual$ageBroad <- fct_relevel(individual$ageBroad, "0--8", "9--17", 
+                                   "18--20", "21--23", "24--26", "27--29", 
+                                   "30--38", "39--47", "48+")
+
+#converts the columns with characters into unordered factors
+factor_cols <- c("Datasource", "gender", "majorityStatus", "majorityEntry", 
+                 "citizenship", "RecruiterRelationship", "CountryOfExploitation")
+
+for (column in factor_cols){
+  individual[,column] <- as.factor(unlist(individual[,column]))
+}
+
+
+country_path <- paste(sure_path, "/data/country_summary_dat.csv", sep = "")
+country <- read_csv(country_path, 
+                    col_types = cols(X1 = col_skip(),
+                                     poverty2015 = col_double(), 
+                                     poverty2016 = col_double(), 
+                                     poverty2017 = col_double(), 
+                                     poverty2018 = col_double(), 
+                                     gender2006 = col_double(), 
+                                     gender2007 = col_double(), 
+                                     gender2008 = col_double(), 
+                                     gender2009 = col_double(), 
+                                     gender2010 = col_double(), 
+                                     gender2011 = col_double(), 
+                                     gender2012 = col_double(), 
+                                     gender2013 = col_double(), 
+                                     gender2014 = col_double(), 
+                                     gender2015 = col_double(), 
+                                     gender2016 = col_double(), 
+                                     gender2017 = col_double(), 
+                                     gdp_per_capita2017 = col_double()),
+                    na = c("", "NA", "N/A")
+  
+)
+
+
+population_path <- paste(sure_path, "/data/population.csv", sep = "")
+population <- read_csv(population_path, 
+                       col_types = cols(X1 = col_skip()))
+
+#readr has trouble reading the numbers in their original format
+population[,-(1:2)] <- sapply(population[,-(1:2)], str_replace_all, " ", "")
+population[,-(1:2)] <- sapply(population[,-(1:2)], str_replace, "[.]", "")
+population[,-(1:2)] <- sapply(population[,-(1:2)], as.numeric)
+
+
+migration_path <- paste(sure_path, "/data/migration.csv", sep = "")
+migration <- read_csv(migration_path, col_types = cols(X1 = col_skip()))
+
+migration$value <- str_replace_all(migration$value, "[..]", "0")
+migration$value <- str_replace_all(migration$value, ",", "")
+#will throw an "NAs introduced by coercion" error but I think those rows have 
+#NAs in the original dataset and the error is safe to ignore
+migration$value <- as.numeric(migration$value) 
+```
+
+## Shiva
+
+```{r}
+
+```
+
+## Imani and Michael
+
+```{r}
+
+```
