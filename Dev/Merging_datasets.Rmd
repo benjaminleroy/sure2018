@@ -32,7 +32,7 @@ individual$ageBroad <- fct_relevel(individual$ageBroad, "0--8", "9--17",
 factor_cols <- c("Datasource", "gender", "majorityStatus", "majorityEntry", 
                  "citizenship", "RecruiterRelationship", "CountryOfExploitation")
 
-for (column in factor_cols){
+for (column in factor_cols) {
   individual[,column] <- as.factor(unlist(individual[,column]))
 }
 
@@ -91,18 +91,19 @@ migration$value <- as.numeric(migration$value)
 ## Imani and Michael
 
 ```{r}
+library(reshape2)
 #dataset of poverty
-poverty.data<-select(country, Country.y:Country.x, 
+poverty.data < -select(country, Country.y:Country.x, 
                      poverty1990:poverty2018)
 
 #renames columns by year 
-names(poverty.data)[3:31]=c("1990","1991","1992","1993","1994","1995","1996",
-                            "1997","1998","1999","2000","2001","2002","2003",
-                            "2004","2005","2006","2007","2008","2009","2010",
-                            "2011","2012","2013","2014","2015","2016","2017",
-                            "2018") 
+names(poverty.data)[3:31] <- c("1990","1991","1992","1993","1994","1995","1996",
+                              "1997","1998","1999","2000","2001","2002","2003",
+                              "2004","2005","2006","2007","2008","2009","2010",
+                              "2011","2012","2013","2014","2015","2016","2017",
+                              "2018") 
 #rearrages data so years have their own column with their corresponding value
-poverty.data<-poverty.data%>%melt(id=c("Country.x","Country.y"))
+poverty.data <- poverty.data %>% melt(id = c("Country.x","Country.y"))
 
 #poverty.data <- poverty.data %>% arrange(Country.x, Country.y) 
 #(ordered by country instead of year)
