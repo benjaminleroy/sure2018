@@ -104,4 +104,6 @@ names(poverty.data)[3:31]=c("1990","1991","1992","1993","1994","1995","1996",
 #rearrages data so years have their own column with their corresponding value
 poverty.data<-poverty.data%>%melt(id=c("Country.x","Country.y"))
 
+#poverty.data <- poverty.data %>% arrange(Country.x, Country.y) 
+#(ordered by country instead of year)
 ```
