@@ -12,7 +12,7 @@
 #
 #returns: a numeric matrix
 
-require(dplyr)
+require(dplyr, plyr)
 
 interpolate_line <- function(entry){
   #draws a straight line between to data points to fill in missing values
@@ -26,8 +26,8 @@ interpolate_line <- function(entry){
       which.max
     difference <- entry[right_point + 1] - entry[left_point]
     
-    entry[left_point:right_point + 1] <- entry[left_point] + 
-      difference*(1:right_point)/right_point
+    entry[left_point:right_point + 1] <- as.numeric(entry[left_point]) + 
+      as.numeric(difference)*(1:right_point)/right_point
     
     entry[(right_point+1):length(entry)] <- 
       interpolate_line(entry[(right_point+1):length(entry)])
@@ -63,7 +63,5 @@ fill_na <- function (entry, var_cols) {
 
 linearly_interpolate<- function(df, var_cols) {
   #apply loop over the rows of the data frame calling fill_na 
-  df %>% 
-    apply(MARGIN = 1, fill_na, var_cols) %>% 
-    t
+  df %>% plyr::adply(1, fill_na, var_cols) 
   }
