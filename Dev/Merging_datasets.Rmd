@@ -88,7 +88,7 @@ migration$value <- as.numeric(migration$value)
 
 ```
 
-## Imani and Michael
+## Imani 
 
 ```{r}
 library(reshape2)
@@ -248,3 +248,108 @@ country_merge<- country_merge%>% left_join(tier_data,
                                                   "Year"="Year")))
 }
 ```
+
+#Michael
+```{r}
+library(tidyverse)
+library(reshape2)
+
+
+
+#Gives total migration from all countries to WORLD in 1990, 1995, 2000, 2005, 2010, 2015, 2017.
+migrationFromCountryToWorldBools <- migration$`Major area, region, country or area of destination` == "WORLD"
+migrationFromCountryToWorld <- migration[migrationFromCountryToWorldBools, ]
+migrationFromCountryToWorld <- na.omit(migrationFromCountryToWorld)
+View(migrationFromCountryToWorld)
+
+
+#Gives total migration from WORLD to all countries in 1990, 1995, 2000, 2005, 2010, 2010, 2015, 2017
+year_vec <- c(1990, 1995, 2000, 2005, 2010, 2015, 2017)
+migration_counts = data.frame()
+for(i in year_vec) {
+  df = migration %>% filter(Year == i)
+  df_phony = data.frame()
+  df_mig <- tapply(df$value, df$`Major area, region, country or area of destination`, sum)
+  year <- rep(i, length(df_mig))
+  df_phony <- cbind(year, df_mig)
+  migration_counts = rbind(migration_counts, df_phony)
+}
+View(migration_counts)
+
+########################
+
+#Potentially useful package for converting full name to country code, vice versa
+install.packages("countrycode")
+library(countrycode)
+?codelist
+listOfCountryLongNames <- migration$variable[!duplicated(migration$variable)]
+countryName_vec <- as.vector(listOfCountryLongNames)
+
+#######################
+
+#Convert Country.Y, Country.X, and 3 Letter Code of COUNTRY dataset to 2 Letter Code
+countryY_vec <- country %>% pull(Country.y) %>% as.vector()
+countryX_vec <- country %>% pull(Country.x) %>% as.vector()
+country3LCode_vec <- country %>% pull(`Country Code`) %>% as.vector()
+countryXY3L_vec <- data.frame(countryY_vec, countryX_vec, country3LCode_vec)
+country2LCode_vec <- countrycode(countryXY3L_vec$country3LCode_vec, 'genc3c', 'genc2c')
+countryXY3L2LCode_vec <- countryXY3L_vec %>% mutate(country2LCode_vec)
+View(countryXY3L2LCode_vec)
+#What do I do with missing countries? I can get rid of them with na.omit
+
+#######################
+
+#Convert 2 Letter Country Code of individual$citizenship to Full Country Name and 3 Letter Codes
+indvl_2LCCodesCitizen <- individual %>% pull(citizenship) %>% as.vector()
+indvl_3LCCodesCitizen <- countrycode(indvl_2LCCodesCitizen, 'genc2c', 'genc3c') %>% as.vector()
+indvl_fullCNameCitizen <- countrycode(indvl_2LCCodesCitizen, 'genc2c', 'country.name') %>% as.vector()
+multiName_individual <- individual %>% mutate(indvl_3LCCodesCitizen, indvl_fullCNameCitizen) %>% select (citizenship, indvl_3LCCodesCitizen, indvl_fullCNameCitizen, everything())
+indvl_2LCCodesTraffick <- individual %>% pull(CountryOfExploitation) %>% as.vector()
+indvl_3LCCodesTraffick <- countrycode(indvl_2LCCodesTraffick, 'genc2c', 'genc3c') %>% as.vector()
+indvl_fullCNameTraffick <- countrycode(indvl_2LCCodesTraffick, 'genc2c', 'country.name') %>% as.vector()
+
+#Adds full name and 3 letter codes to individual database
+manyNames_individual <- multiName_individual %>% mutate(indvl_3LCCodesTraffick, indvl_fullCNameTraffick) %>% select(CountryOfExploitation, indvl_3LCCodesTraffick, indvl_fullCNameTraffick, everything())
+View(manyNames_individual)
+
+#migCountryOfCitizenTOTraffickCountry finds migration from citizenship country to trafficked country
+#In 1990, 1995, 2000, 2005, 2010, 2010, 2015, 2017
+###STILL WORKING ON THIS
+for(i in 1:nrow(manyNames_individual)) {
+  
+  df = migration %>% filter(indvl_fullCNameCitizen)
+  df_temp = data.frame()
+  df_migration <- 
+  
+  
+)
+  
+migCountryOfCitizenToTraffickCountry <- 
+
+
+
+
+manyNameIndiv_vec <- manyNames_individual %>% as.vector()
+for(i in manyNameIndiv_vec) {
+  
+  
+  
+}
+migrationFromWorldToCountryBools <- migration_counts$df_mig == ""
+#Need merged dataset to fill in "" above: mergedDataSet$traffickedCountry
+migWorldToCountrySubset <- migration_counts[migrationFromWorldToCountryBools,]
+View(migWorldToCountrySubset)
+
+  
+
+#migCountryOfCitizenToWorld finds migration from citizenship country to world
+##STILL WORKING ON THIS
+migCountryOfCitizenshipToWorld <- 
+
+  
+  
+
+
+
+```
+
