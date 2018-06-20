@@ -257,10 +257,10 @@ library(reshape2)
 
 
 #Gives total migration from all countries to WORLD in 1990, 1995, 2000, 2005, 2010, 2015, 2017.
-migrationFromCountryToWorldBools <- migration$`Major area, region, country or area of destination` == "WORLD"
-migrationFromCountryToWorld <- migration[migrationFromCountryToWorldBools, ]
-migrationFromCountryToWorld <- na.omit(migrationFromCountryToWorld)
-View(migrationFromCountryToWorld)
+migrationFromAllCountryToWorldBools <- migration$`Major area, region, country or area of destination` == "WORLD"
+migrationFromAllCountryToWorld <- migration[migrationFromCountryToWorldBools, ]
+migrationFromAllCountryToWorld <- na.omit(migrationFromCountryToWorld)
+View(migrationFromAllCountryToWorld)
 
 
 #Gives total migration from WORLD to all countries in 1990, 1995, 2000, 2005, 2010, 2010, 2015, 2017
@@ -315,38 +315,58 @@ View(manyNames_individual)
 #migCountryOfCitizenTOTraffickCountry finds migration from citizenship country to trafficked country
 #In 1990, 1995, 2000, 2005, 2010, 2010, 2015, 2017
 ###STILL WORKING ON THIS
-for(i in 1:nrow(manyNames_individual)) {
-  
-  df = migration %>% filter(indvl_fullCNameCitizen)
-  df_temp = data.frame()
-  df_migration <- 
-  
-  
-)
-  
-migCountryOfCitizenToTraffickCountry <- 
 
-
-
-
-manyNameIndiv_vec <- manyNames_individual %>% as.vector()
-for(i in manyNameIndiv_vec) {
-  
-  
-  
-}
-migrationFromWorldToCountryBools <- migration_counts$df_mig == ""
-#Need merged dataset to fill in "" above: mergedDataSet$traffickedCountry
-migWorldToCountrySubset <- migration_counts[migrationFromWorldToCountryBools,]
-View(migWorldToCountrySubset)
+#ctrl shift c to comment out / in 
+# for(i in 1:nrow(manyNames_individual)) {
+# 
+#   df = migration %>% filter(indvl_fullCNameCitizen)
+#   df_temp = data.frame()
+#   df_migration <-
+# 
+# 
+# )
+# 
+# migCountryOfCitizenToTraffickCountry <-
+# 
+# 
+# 
+# 
+# manyNameIndiv_vec <- manyNames_individual %>% as.vector()
+# for(i in manyNameIndiv_vec) {
+#   
+#   
+#   
+# }
+# migrationFromWorldToCountryBools <- migration_counts$df_mig == ""
+# #Need merged dataset to fill in "" above: mergedDataSet$traffickedCountry
+# migWorldToCountrySubset <- migration_counts[migrationFromWorldToCountryBools,]
+# View(migWorldToCountrySubset)
 
   
 
 #migCountryOfCitizenToWorld finds migration from citizenship country to world
-##STILL WORKING ON THIS
-migCountryOfCitizenshipToWorld <- 
+#Need to filter by year of migration?
 
-  
+
+migByCitizCountryToWorld <- data.frame()
+migByCitizCountryToWorld_df <- data.frame()
+migByCitizCountryToWorldByYear <- data.frame()
+migByCitizCountryToWorldByYear_df <- data.frame()
+yearOfTrafficking_vec <- manyNames_individual %>% pull(yearOfRegistration) %>% as.vector()
+indvl_fullCNameCitizen_vec <- indvl_fullCNameCitizen[!duplicated(indvl_fullCNameCitizen)] %>% as.vector()
+for(i in indvl_fullCNameCitizen_vec) {
+  migByCitizCountryToWorld_df = migrationFromAllCountryToWorld %>% filter(variable == i)
+  migByCitizCountryToWorld = rbind(migByCitizCountryToWorld, migByCitizCountryToWorld_df)
+}
+
+#Must wait for Shiva's stratifaction to get estimates for every year.
+for(j in yearOfTrafficking_vec) {
+  migByCitizCountryToWorldByYear_df = migByCitizCountryToWorld %>% filter(Year == j)
+  migByCitizCountryToWorldByYear = rbind(migByCitizCountryToWorldByYear, migByCitizCountryToWorldByYear_df)
+}
+View(migByCitizCountryToWorldByYear)
+
+
   
 
 
