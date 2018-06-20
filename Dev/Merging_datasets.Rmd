@@ -251,6 +251,11 @@ country_merge<- country_merge%>% left_join(tier_data,
 
 #Michael
 ```{r}
+
+#For me to do: Put your migrationFromAllCountryToWorld in Shiva's linear interpolation function.
+#In the functions folder.
+#Need to transform the data into columns with 1990, 1991, etc... and rows country A, country B, etc...
+
 library(tidyverse)
 library(reshape2)
 
@@ -358,7 +363,6 @@ for(i in indvl_fullCNameCitizen_vec) {
   migByCitizCountryToWorld_df = migrationFromAllCountryToWorld %>% filter(variable == i)
   migByCitizCountryToWorld = rbind(migByCitizCountryToWorld, migByCitizCountryToWorld_df)
 }
-
 #Must wait for Shiva's stratifaction to get estimates for every year.
 for(j in yearOfTrafficking_vec) {
   migByCitizCountryToWorldByYear_df = migByCitizCountryToWorld %>% filter(Year == j)
