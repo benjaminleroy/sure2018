@@ -91,27 +91,30 @@ migration$value <- as.numeric(migration$value)
 ## Imani 
 
 ```{r}
-library(reshape2)
-#dataset of poverty
+library(tidyverse)
+
+#Clearing NA's from cCountry.y by copying a lowercase version of Country.X
+country <-country %>% filter(!(is.na(Country.y) & is.na(Country.x)))
+
+
+country$Country.y= tolower(country$Country.x)
+
+country$Country.y <-str_to_title(country$Country.y)
+
 #melting poverty data
 
-library(tidyverse)
 library(reshape2)
-poverty_data<-select(country, Country.y:Country.x, poverty2002:poverty2017)
+poverty_data<-select(country, Country.y:Country.x, `Country Code`, poverty2002:poverty2017)
 
 
-names(poverty_data)[3:18]=as.character(2002:2017)
+names(poverty_data)[4:19]=as.character(2002:2017)
 
-poverty_data<-poverty_data%>%melt(id=c("Country.x","Country.y"), 
+poverty_data<-poverty_data%>%melt(id=c("Country.y","Country.x","Country Code"), 
                                   variable.name = "Year",
                                           value.name = "Poverty")
 
 
-poverty_data <- poverty_data %>% arrange(Country.x, Country.y)
-
-
-
-
+poverty_data <- poverty_data %>% arrange(Country.y, Country.x)
 
 
 
@@ -120,35 +123,35 @@ poverty_data <- poverty_data %>% arrange(Country.x, Country.y)
 #melting gdp data
 
 
-gdp_data<-select(country, Country.y:Country.x,
+gdp_data<-select(country, Country.y:Country.x, `Country Code`,
                  gdp_per_capita2002:gdp_per_capita2017)
 
 
-names(gdp_data)[3:18]=as.character(2002:2017)
+names(gdp_data)[4:19]=as.character(2002:2017)
 
-gdp_data<-gdp_data%>%melt(id=c("Country.x","Country.y"), 
+gdp_data<-gdp_data%>%melt(id=c("Country.y","Country.x","Country Code"), 
                                   variable.name = "Year",
                                   value.name = "GDP")
 
 
 
-gdp_data <- gdp_data %>% arrange(Country.x, Country.y)
-
+gdp_data <- gdp_data %>% arrange(Country.y, Country.x)
 
 
 
 #melting bribes data
-bribe_data<-select(country, Country.y:Country.x, bribes2017:bribes2010)
+bribe_data<-select(country, Country.y:Country.x, `Country Code`,
+                   bribes2017:bribes2010)
 
 
-names(bribe_data)[3:10]=as.character(2010:2017)
+names(bribe_data)[4:11]=as.character(2010:2017)
 
-bribe_data<-bribe_data%>%melt(id=c("Country.x","Country.y"), 
+bribe_data<-bribe_data%>%melt(id=c("Country.y","Country.x","Country Code"), 
                               variable.name = "Year",
                               value.name = "Bribe")
 
 
-bribe_data <- bribe_data %>% arrange(Country.x, Country.y)
+bribe_data <- bribe_data %>% arrange(Country.y, Country.x)
 
 
 
@@ -156,18 +159,19 @@ bribe_data <- bribe_data %>% arrange(Country.x, Country.y)
 
 #melting crime 
 
-crime_data<-select(country, Country.y:Country.x, 
+crime_data<-select(country, Country.y:Country.x, `Country Code`,
                    organized_crime2017:organized_crime2007)
 
 
-names(crime_data)[3:13]=as.character(2007:2017)
+names(crime_data)[4:14]=as.character(2007:2017)
 
-crime_data<-crime_data%>%melt(id=c("Country.x","Country.y"), 
+crime_data<-crime_data%>%melt(id=c("Country.y","Country.x","Country Code"), 
                               variable.name = "Year",
                               value.name = "Crime")
 
 
-crime_data <- crime_data %>% arrange(Country.x, Country.y)
+crime_data <- crime_data %>% arrange(Country.y, Country.x)
+
 
 
 
@@ -178,53 +182,87 @@ crime_data <- crime_data %>% arrange(Country.x, Country.y)
 
 
 #melting gender data
-gender_data<-select(country, Country.x:Country.y, gender2006:gender2017)
+gender_data<-select(country, Country.x:Country.y, `Country Code`,
+                    gender2006:gender2017)
 
 
-names(gender_data)[3:14]=as.character(2006:2017)
+names(gender_data)[4:15]=as.character(2006:2017)
 
-gender_data<-gender_data%>%melt(id=c("Country.y","Country.x"), 
+gender_data<-gender_data%>%melt(id=c("Country.y","Country.x","Country Code"), 
                                 variable.name = "Year",
                                 value.name = "Gender")
 
 
-gender_data <- gender_data %>% arrange(Country.x, Country.y)
+gender_data <- gender_data %>% arrange(Country.y, Country.x)
+
 
 
 
 
 
 #melting tier data
-tier_data<-select(country, Country.y:Country.x, tier2002:tier2017)
+tier_data<-select(country, Country.y:Country.x, `Country Code`,
+                  tier2002:tier2017)
 
 
-names(tier_data)[3:18]=as.character(2002:2017)
+names(tier_data)[4:19]=as.character(2002:2017)
 
-tier_data<-tier_data%>%melt(id=c("Country.x","Country.y"), 
+tier_data<-tier_data%>%melt(id=c("Country.y","Country.x","Country Code"), 
                             variable.name = "Year",
                             value.name = "Tier")
 
 
-tier_data <- tier_data %>% arrange(Country.x, Country.y)
+tier_data <- tier_data %>% arrange(Country.y, Country.x)
+
 
 
 
 
 #melting peace data
-peace_data<-select(country, Country.y:Country.x, peace2008:peace2017)
+peace_data<-select(country, Country.y:Country.x, `Country Code`,
+                   peace2008:peace2017)
 
 
-names(peace_data)[3:12]=as.character(2008:2017)
+names(peace_data)[4:13]=as.character(2008:2017)
 
 
-peace_data<-peace_data%>%melt(id=c("Country.x","Country.y"), 
+
+
+peace_data<-peace_data%>%melt(id=c("Country.y","Country.x","Country Code"), 
                               variable.name = "Year",
                               value.name = "Peace")
 
 
-peace_data <- peace_data %>% arrange(Country.x, Country.y)
+peace_data <- peace_data %>% arrange(Country.y, Country.x)
 
 
+
+
+
+
+#merging data sets together
+library(plyr)
+cdataframes<- list(poverty_data, gdp_data, bribe_data, crime_data, gender_data,
+                   peace_data,tier_data)
+
+
+
+country_merge<-join_all(cdataframes,  by=(c("Country.y"="Country.y",
+                             "Country.x"="Country.x", "Country Code",
+                             "Year"="Year")), type='left')
+
+
+
+```
+
+```{r}
+
+poverty_data
+
+```
+
+
+```{r}
 
 inactiveFunct = function(x) {
 #merging data sets together (THIS WIL BREAK YOUR COMPUTER DO NOT RUN)
