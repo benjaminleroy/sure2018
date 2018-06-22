@@ -93,6 +93,12 @@ migration$value <- as.numeric(migration$value)
 ```{r}
 library(tidyverse)
 
+#filling missing values in the country summary data set
+sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
+source(paste(sure_path, "/functions/linearly_interpolate.R", sep = ""))
+country <- linearly_interpolate(country, list(6:15, 32:60, 61:72, 73:130, 
+                                              138:131, 149:139))
+
 #Clearing NA's from cCountry.y by copying a lowercase version of Country.X
 country <-country %>% filter(!(is.na(Country.y) & is.na(Country.x)))
 
