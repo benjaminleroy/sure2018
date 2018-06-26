@@ -490,16 +490,6 @@ write.csv(individual_merge, file = "individual_merge")
 
 #######################
 
-# #Convert Country.Y, Country.X, and 3 Letter Code of COUNTRY dataset to 2 Letter Code
-# countryY_vec <- country %>% pull(Country.y) %>% as.vector()
-# countryX_vec <- country %>% pull(Country.x) %>% as.vector()
-# country3LCode_vec <- country %>% pull(`Country Code`) %>% as.vector()
-# countryXY3L_vec <- data.frame(countryY_vec, countryX_vec, country3LCode_vec)
-# country2LCode_vec <- countrycode(countryXY3L_vec$country3LCode_vec, 'genc3c', 'genc2c')
-# countryXY3L2LCode_vec <- countryXY3L_vec %>% mutate(country2LCode_vec)
-# #I haven't yet added this to the country dataset because there seems to be no need
-# #What do I do with missing countries? I can get rid of them with na.omit
-
 
 
 ```
@@ -524,8 +514,44 @@ big_merge <- country_merge_citz %>% right_join(big_merge,
 View(big_merge)
 ```
 
-
+#Michael (cont)
 ```{r}
+
+
+library(tidyverse)
+library(tidyr)
+library(reshape2)
+source(paste(sure_path, '/functions/linearly_interpolate.R', sep = ''))
+
+
+missingPopyears_vec <- c("pop1951", "pop1952", "pop1953", "pop1954", "pop1956", "pop1957", "pop1958", "pop1959", "pop1961", "pop1962", "pop1963", "pop1964", "pop1966", "pop1967", "pop1968", "pop1969", "pop1971", "pop1972", "pop1973", "pop1974", "pop1976", "pop1977", "pop1978", "pop1979", "pop1981", "pop1982", "pop1983", "pop1984", "pop1986", "pop1987", "pop1988", "pop1989", "pop1991", "pop1992", "pop1993", "pop1994", "pop1996", "pop1997", "pop1998", "pop1999", "pop2001", "pop2002", "pop2003", "pop2004", "pop2006", "pop2007", "pop2008", "pop2009", "pop2011", "pop2012", "pop2013", "pop2014", "pop2016", "pop2017")
+for(i in missingPopyears_vec) {
+  population[[i]] <- c(NA)
+}
+populationColOrder <- c("ISO 3166-1 numeric code", "Location", "pop1950", "pop1951", "pop1952", "pop1953", "pop1954", "pop1955", "pop1956", "pop1957", "pop1958", "pop1959", "pop1960", "pop1961", "pop1962", "pop1963", "pop1964", "pop1965", "pop1966", "pop1967", "pop1968", "pop1969", "pop1970", "pop1971", "pop1972", "pop1973", "pop1974", "1975", "pop1976", "pop1977", "pop1978", "pop1979", "pop1980", "pop1981", "pop1982", "pop1983", "pop1984", "pop1985", "pop1986", "pop1987", "pop1988", "pop1989", "pop1990", "pop1991", "pop1992", "pop1993", "pop1994", "pop1995", "pop1996", "pop1997", "pop1998", "pop1999", "pop2000", "pop2001", "pop2002", "pop2003", "pop2004", "pop2005", "pop2006", "pop2007", "pop2008", "pop2009", "pop2010", "pop2011", "pop2012", "pop2013", "pop2014", "pop2015", "pop2016", "pop2017")
+populationOrdered <- population[, populationColOrder]
+colnames(populationOrdered)[28] <- "pop1975"
+
+View(populationOrdered)
+#List of columns to fill in with linear interpolation function
+population_full <- linearly_interpolate(populationOrdered, list(2:70))
+
+
+
+migration_full_gathered <- migration_full %>% gather("Year", "Value", 2:29)
+
+for(i in 0:13) {
+  1950 + (5 * i)
+  population$pop1950 %>% pull() %>% as.vector()
+  
+}
+
+
+
+population2 <- population %>% mutate(p)
+
+population_LI <- linearly_interpolate(population2, list(3:16))
+View(population_LI)
 
 ```
 
