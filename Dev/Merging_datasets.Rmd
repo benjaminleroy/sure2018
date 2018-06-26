@@ -296,6 +296,7 @@ country_merge<- country_merge%>% left_join(tier_data,
 #Michael
 ```{r}
 
+
 ####################
 
 library(tidyverse)
@@ -488,8 +489,8 @@ individual_merge <- manyNames_individual_test3
 View(individual_merge)
 
 
-
-
+write.csv(individual_merge, file = "individual_merge")
+#written in the Dev file
 
 #######################
 
