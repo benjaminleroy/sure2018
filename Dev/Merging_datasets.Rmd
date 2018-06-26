@@ -367,18 +367,15 @@ yearOfTrafficking_vec_NoRep <- yearOfTrafficking_vec[!duplicated(yearOfTrafficki
 for(i in indvl_fullCNameCitizen_vec) {
   migByCitizCountry_df = migration2 %>% filter(origin == i)
   migByCitizCountry = rbind(migByCitizCountry, migByCitizCountry_df)
-  print(i)
 }
 
 for(j in indvl_fullCNameTraffick_vec) {
   migByCitizCountryToTraffCountry_df = migByCitizCountry %>% filter(destination == j)
   migByCitizCountryToTraffCountry = rbind(migByCitizCountryToTraffCountry, migByCitizCountryToTraffCountry_df)
-  print(j)
 }
 for(k in yearOfTrafficking_vec_NoRep) {
   migByCitizCountryToTraffCountryByYear_df = migByCitizCountryToTraffCountry %>% filter(Year == k)
   migByCitizCountryToTraffCountryByYear = rbind(migByCitizCountryToTraffCountryByYear, migByCitizCountryToTraffCountryByYear_df)
-  print(k)
 }
 
 ####################
@@ -438,13 +435,11 @@ indvl_fullCNameTraffick_vec
 for(j in indvl_fullCNameTraffick_vec) {
   migByWORLDToTraffCountry_df = migration_counts %>% filter(destination == j)
   migByWORLDToTraffCountry = rbind(migByWORLDToTraffCountry, migByWORLDToTraffCountry_df)
-  print(j)
 }
 
 for(k in yearOfTrafficking_vec_NoRep) {
   migByWORLDToTraffCountryByYear_df = migByWORLDToTraffCountry %>% filter(year == k)
   migByWORLDToTraffCountryByYear = rbind(migByWORLDToTraffCountryByYear, migByWORLDToTraffCountryByYear_df)
-  print(k)
 }
 
 ####################
