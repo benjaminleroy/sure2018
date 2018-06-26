@@ -1,0 +1,106 @@
+---
+title: "Stratifying individual data set"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing data set and packages
+```{r}
+library(tidyverse)
+sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
+individual_path <- paste(sure_path, "/data/individual_database.csv", sep = "")
+individual <- read_csv(individual_path, 
+                       col_types = cols(X1 = col_skip(), 
+                                        meansOfControlRestrictsFinancialAccess = col_integer(), 
+                                        meansOfControlSexualAbuse = col_integer(), 
+                                        meansOfControlUsesChildren = col_integer(), 
+                                        typeOfSexPornography = col_integer(), 
+                                        typeOfSexRemoteInteractiveServices = col_integer(), 
+                                        typeOfSexPrivateSexualServices = col_integer()))
+
+#converts year of registration and ageBroad into ordered factors
+individual$yearOfRegistration <- as.ordered(individual$yearOfRegistration)
+individual$ageBroad <- as.ordered(individual$ageBroad)
+individual$ageBroad <- fct_relevel(individual$ageBroad, "0--8", "9--17", 
+                                   "18--20", "21--23", "24--26", "27--29", 
+                                   "30--38", "39--47", "48+")
+
+#converts the columns with characters into unordered factors
+factor_cols <- c("Datasource", "gender", "majorityStatus", "majorityEntry", 
+                 "citizenship", "RecruiterRelationship", "CountryOfExploitation")
+
+for (column in factor_cols){
+  individual[,column] <- as.factor(unlist(individual[,column]))
+}
+
+
+
+```
+
+## Stratifying the individual data set
+
+Stratifying the sample by citizenship, CountryOfExploitation, gender, and ageBroad.
+Distribution of the number of observations in each strata:
+```{r, warning= FALSE}
+strat1 <- individual %>% 
+  group_by(citizenship, CountryOfExploitation, gender,  ageBroad) %>% 
+  summarise(n = n())
+ggplot(strat1, aes(x = n)) + geom_histogram() + 
+  scale_x_log10(minor_breaks = c(seq.int(20, 90, 10), seq.int(200, 900, 100),
+                                 seq.int(2000, 5000, 1000)))
+
+summary(strat1$n)
+```
+
+Looking at the strata with 15 or fewer observations
+```{r}
+strat1[strat1$n <= 15,]
+```
+
+Stratifying the sample by citizenship, CountryOfExploitation, gender, ageBroad, 
+and RecruiterRelationship.
+Distribution of the number of observations in each strata:
+
+```{r}
+strat2 <- individual %>% 
+  group_by(citizenship, CountryOfExploitation, gender, ageBroad, RecruiterRelationship) %>% 
+  summarise(n = n())
+ggplot(strat2, aes(x = n)) + geom_histogram() + 
+  scale_x_log10(minor_breaks = c(seq.int(20, 90, 10), seq.int(200, 900, 100),
+                                 seq.int(2000, 5000, 1000)))
+
+summary(strat2$n)
+```
+
+```{r}
+
+```
+
+
+```{r}
+#Work in progress:
+#A function to combine the small strata with similar strata.
+s1 <- strat1[strat1$n <= 15,]
+s2 <- strat1[strat1$n > 15, ]
+
+distance <- double()
+for (i in 1:nrow(s2)){
+  distance <- c(distance, simple_distance(s1[1,], s2[i,]))
+}
+
+simple_distance <- function(entry1, entry2) {(entry1[1:3] != entry2[1:3]) %>%
+    .^2 %>% 
+    sum() %>% 
+  + (as.integer(entry1[4]) - as.integer(entry2[4]))^2.
+}
+
+distance <- double()
+a <- 31
+for (i in 1:nrow(s2)){
+  distance <- c(distance, simple_distance(s1[a,], s2[i,]))
+  }
+```
+
