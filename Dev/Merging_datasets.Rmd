@@ -246,52 +246,48 @@ peace_data <- peace_data %>% arrange(Country.y, Country.x)
 
 
 
-#merging data sets together
+#creating datsets to merge together
 library(plyr)
 cdataframes<- list(poverty_data, gdp_data, bribe_data, crime_data, gender_data,
                    peace_data,tier_data)
 
+#creating dataset to merge to exploitation information
 
-
-country_merge<-join_all(cdataframes,  by=(c("Country.y"="Country.y",
+country_merge_exp<-join_all(cdataframes,  by=(c("Country.y"="Country.y",
                              "Country.x"="Country.x", "Country Code",
                              "Year"="Year")), type='left')
 
 
+names(country_merge_exp)[1:2]=c("Country of Exploitation.y", "Country of Exploitation.x")
 
-```
+names(country_merge_exp)[5:11]=c("Exp Poverty", "Exp GDP",
+                                 "Exp Bribe", "Exp Crime",
+                                 "Exp Gender", "Exp Peace",
+                                 "Exp Tier")
 
-```{r}
-
-poverty_data
-
-```
-
-
-```{r}
-
-inactiveFunct = function(x) {
-#merging data sets together (THIS WIL BREAK YOUR COMPUTER DO NOT RUN)
-library(plyr)
-cdataframes<- list(poverty_data, gdp_data, bribe_data, crime_data, gender_data)
-
-
-
-country_merge<-join_all(cdataframes,  by=(c("Country.y"="Country.y",
-                             "Country.x"="Country.x",
+#Creating datset to merge to citizenship information
+country_merge_citz<-join_all(cdataframes,  by=(c("Country.y"="Country.y",
+                             "Country.x"="Country.x", "Country Code",
                              "Year"="Year")), type='left')
 
-country_merge<- country_merge%>% left_join(tier_data,
-                                           by=(c("Country.y"="Country.y",
-                                              "Country.x"="Country.x",
-                                              "Year"="Year")))%>%
-                                    
-                                  left_join(peace_data,
-                                            by=(c("Country.y"="Country.y",
-                                                  "Country.x"="Country.x",
-                                                  "Year"="Year")))
-}
+
+names(country_merge_citz)[1:2]=c("Country of Citizenship.y", "Country of Citizenship.x")
+
+names(country_merge_citz)[5:11]=c("Citz Poverty", "Citz GDP",
+                                 "Citz Bribe", "Citz Crime",
+                                 "Citz Gender", "Citz Peace",
+                                 "Citz Tier")
+
+
+
+
+
+
+
+
 ```
+
+
 
 #Michael
 ```{r}
@@ -329,7 +325,7 @@ migration2 <- migration_full_gathered %>% separate(col = "origin_destination", i
 
 ########################
 
-install.packages("countrycode")
+#install.packages("countrycode")
 library(countrycode)
 listOfCountryLongNames <- migration2$origin[!duplicated(migration2$origin)]
 countryName_vec <- as.vector(listOfCountryLongNames)
@@ -503,6 +499,28 @@ write.csv(individual_merge, file = "individual_merge")
 # countryXY3L2LCode_vec <- countryXY3L_vec %>% mutate(country2LCode_vec)
 # #I haven't yet added this to the country dataset because there seems to be no need
 # #What do I do with missing countries? I can get rid of them with na.omit
+
+
+
+```
+
+
+
+#Imani (cont)
+```{r}
+
+ big_merge <- country_merge_exp %>% right_join(individual_merge,                                           by=(c("CountryofExploitation.y"="Country of Exploitation",
+                                              "Year"="Year of Registration",
+                                              "Country Code"="Country of Exploitation (3L)")))
+ 
+big_merge <- country_merge_citz %>% right_join(big_merge, 
+                                       by=(c("Country of Citizenship.y"
+                                              ="Country of Citizenship",
+                                              "Year"="Year",
+                                              "Country Code"="Country of Citizenship (3L)"))) 
+
+
+```
 
 
 
