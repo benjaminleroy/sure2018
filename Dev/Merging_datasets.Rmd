@@ -534,25 +534,68 @@ colnames(populationOrdered)[28] <- "pop1975"
 
 View(populationOrdered)
 #List of columns to fill in with linear interpolation function
-population_full <- linearly_interpolate(populationOrdered, list(2:70))
+population_full <- linearly_interpolate(populationOrdered, list(3:70))
+
+
+population_full_gathered <- population_full %>% gather("Year", "Population in Year", 3:70)
+
+population_full_gathered$Year <- gsub('[a-z]+', '', pop_vec)
+
+#Removing ISO code, not needed it seems.
+population_full_gathered$`ISO 3166-1 numeric code` <- NULL
 
 
 
-migration_full_gathered <- migration_full %>% gather("Year", "Value", 2:29)
+#Filtering out to make population_full_gathered_filterCitiz
+popOfCitizCountry_df <- data.frame()
+popOfCitizCountry <- data.frame()
+popOfCitizCountryByYear_df <- data.frame()
+popOfCitizCountryByYear <- data.frame()
+population_full_gathered_filterCitizCandYear <- data.frame()
 
-for(i in 0:13) {
-  1950 + (5 * i)
-  population$pop1950 %>% pull() %>% as.vector()
-  
+for(i in indvl_fullCNameCitizen_vec) {
+  popOfCitizCountry_df = population_full_gathered %>% filter(Location == i)
+  popOfCitizCountry = rbind(popOfCitizCountry, popOfCitizCountry_df)
 }
 
+for(k in yearOfTrafficking_vec_NoRep) {
+  popOfCitizCountryByYear_df = popOfCitizCountry %>% filter(Year == k)
+  popOfCitizCountryByYear = rbind(popOfCitizCountryByYear, popOfCitizCountryByYear_df)
+}
+population_full_gathered_filterCitizCandYear <- popOfCitizCountryByYear
+
+#Filtering out to make population_full_gathered_filterExpl
+popOfTraffCountry_df <- data.frame()
+popOfTraffCountry <- data.frame()
+popOfTraffCountryByYear_df <- data.frame()
+popOfTraffCountryByYear <- data.frame()
+population_full_gathered_filterTraffCandYear <- data.frame()
+
+for(j in indvl_fullCNameTraffick_vec) {
+  popOfTraffCountry_df = population_full_gathered %>% filter(Location == j)
+  popOfTraffCountry = rbind(popOfTraffCountry, popOfTraffCountry_df)
+}
+for(k in yearOfTrafficking_vec_NoRep) {
+  popOfTraffCountryByYear_df = popOfTraffCountry %>% filter(Year == k)
+  popOfTraffCountryByYear = rbind(popOfTraffCountryByYear, popOfTraffCountryByYear_df)
+}
+population_full_gathered_filterTraffCandYear <- popOfTraffCountryByYear
+
+#First, rename columns in population_full_gathered_filterCitizCandYear 
+colnames(population_full_gathered_filterCitizCandYear)[1] <- "Country of Citizenship.y"
+colnames(population_full_gathered_filterCitizCandYear)[2] <- "Year of Registration"
+colnames(population_full_gathered_filterCitizCandYear)[3] <- "Population in Country of Citizenship"
+
+#Second, rename columns in population_full_gathered_filterTraffCandYear
+colnames(population_full_gathered_filterTraffCandYear)[1] <- "Country of Exploitation.y"
+colnames(population_full_gathered_filterTraffCandYear)[2] <- "Year of Registration"
+colnames(population_full_gathered_filterTraffCandYear)[3] <- "Population in Country of Exploitation"
 
 
-population2 <- population %>% mutate(p)
-
-population_LI <- linearly_interpolate(population2, list(3:16))
-View(population_LI)
-
+big_merge_dataset <- left_join(big_merge, population_full_gathered_filterCitizCandYear)
+big_merge_datasets <- left_join(big_merge_dataset, population_full_gathered_filterTraffCandYear)
+View(big_merge_datasets)
+     
 ```
 
 
