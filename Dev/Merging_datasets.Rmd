@@ -259,6 +259,17 @@ country_merge<-join_all(cdataframes,  by=(c("Country.y"="Country.y",
 
 
 
+big_merge <- country_merge %>% left_join(manyNames_individual,
+                                         by = (c("Country.y"="indvl_fullCNameTraffick",
+                                                 "Year"="yearOfRegistration",
+                                                 "Country Code"="indvl_3LCCodesTraffick")))
+
+
+
+
+
+
+
 ```
 
 ```{r}
