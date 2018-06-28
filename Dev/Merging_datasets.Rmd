@@ -599,6 +599,9 @@ View(big_merge_datasets)
 
 write.csv(big_merge_datasets, file = paste(sure_path, 
                                          '/data/big_merge_datasets.csv', sep = ''))
+
+save(big_merge_datasets, file = paste(sure_path, 
+                                         '/data/big_merge_datasets.Rdata', sep = ''))
 #written to the data folder
 ```
 
