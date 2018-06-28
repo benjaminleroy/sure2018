@@ -484,13 +484,8 @@ individual_merge <- manyNames_individual %>%
   left_join(migByWORLDToTraffCountryByYear)
 
 
-#New name to merge! :)
-View(individual_merge)
 
 
-write.csv(individual_merge, file = paste(sure_path, 
-                                         '/data/individual_merge.csv', sep = ''))
-#written to the data folder
 
 #######################
 
@@ -600,6 +595,11 @@ big_merge_dataset <- left_join(big_merge, population_full_gathered_filterCitizCa
 big_merge_datasets <- left_join(big_merge_dataset, population_full_gathered_filterTraffCandYear)
 View(big_merge_datasets)
      
+
+
+write.csv(big_merge_datasets, file = paste(sure_path, 
+                                         '/data/big_merge_datasets.csv', sep = ''))
+#written to the data folder
 ```
 
 
