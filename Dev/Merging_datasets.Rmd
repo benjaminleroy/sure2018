@@ -337,13 +337,13 @@ countryName_vec <- as.vector(listOfCountryLongNames)
 indvl_2LCCodesCitizen <- individual %>% pull(citizenship) %>% as.vector()
 indvl_3LCCodesCitizen <- countrycode(indvl_2LCCodesCitizen, 'genc2c', 'genc3c') %>% as.vector()
 indvl_fullCNameCitizen <- countrycode(indvl_2LCCodesCitizen, 'genc2c', 'country.name') %>% as.vector()
-multiName_individual <- individual %>% mutate(indvl_3LCCodesCitizen, indvl_fullCNameCitizen) %>% select (citizenship, indvl_3LCCodesCitizen, indvl_fullCNameCitizen, everything())
+multiName_individual <- individual %>% dplyr::mutate(indvl_3LCCodesCitizen, indvl_fullCNameCitizen) %>% select (citizenship, indvl_3LCCodesCitizen, indvl_fullCNameCitizen, everything())
 
 indvl_2LCCodesTraffick <- individual %>% pull(CountryOfExploitation) %>% as.vector()
 indvl_3LCCodesTraffick <- countrycode(indvl_2LCCodesTraffick, 'genc2c', 'genc3c') %>% as.vector()
 indvl_fullCNameTraffick <- countrycode(indvl_2LCCodesTraffick, 'genc2c', 'country.name') %>% as.vector()
 #Adds full name and 3 letter codes of trafficking countries to individual database
-manyNames_individual <- multiName_individual %>% mutate(indvl_3LCCodesTraffick, indvl_fullCNameTraffick) %>% select(CountryOfExploitation, indvl_3LCCodesTraffick, indvl_fullCNameTraffick, everything())
+manyNames_individual <- multiName_individual %>% dplyr::mutate(indvl_3LCCodesTraffick, indvl_fullCNameTraffick) %>% select(CountryOfExploitation, indvl_3LCCodesTraffick, indvl_fullCNameTraffick, everything())
 
 
 #####################
@@ -401,7 +401,7 @@ for(j in yearOfTrafficking_vec_NoRep) {
 ##################
 #migByWORLDToTraffCountryByYear which gives the total migration from all countries combined to trafficked countries in 1990 to 2017
 
-year_vec <- c(1990:2017)
+year_vec <- 1990:2017
 migration_counts = data.frame()
 for(i in year_vec) {
   df = migration2 %>% filter(Year == i)
@@ -418,9 +418,9 @@ for(i in 1:nrow(migration_counts)) {
 }
 
 dest_vec <- gsub('[0-9]+', '', dest_vec)
-migration_counts <- migration_counts %>% mutate(dest_vec)
-colnames(migration_counts)[2] <- "Migration Count from All Countries Combined"
-colnames(migration_counts)[3] <- "destination"
+migration_counts <- migration_counts %>% dplyr::mutate(dest_vec)
+colnames(migration_counts)[2:3] <- c("Migration Count from All Countries Combined", "destination")
+
 migration_counts <- migration_counts %>% select("destination", "Migration Count from All Countries Combined", "year")
 
 migByWORLDToTraffCountry_df <- data.frame()
@@ -428,7 +428,7 @@ migByWORLDToTraffCountry <- data.frame()
 migByWORLDToTraffCountryByYear_df <- data.frame()
 migByWORLDToTraffCountryByYear <- data.frame()
 
-indvl_fullCNameTraffick_vec
+
 for(j in indvl_fullCNameTraffick_vec) {
   migByWORLDToTraffCountry_df = migration_counts %>% filter(destination == j)
   migByWORLDToTraffCountry = rbind(migByWORLDToTraffCountry, migByWORLDToTraffCountry_df)
@@ -447,46 +447,45 @@ for(k in yearOfTrafficking_vec_NoRep) {
 #3. migByCitizCountryToTraffCountryByYear which gives migration from citizenship country to trafficking country in 1990 to 2017
 
 #First, clean up and rename columns in migByCitizCountryToTraffCountryByYear to match with manyNames_individual
-colnames(migByCitizCountryToTraffCountryByYear)[1] <- "Country of Citizenship"
-colnames(migByCitizCountryToTraffCountryByYear)[2] <- "Country of Exploitation"                                         
-colnames(migByCitizCountryToTraffCountryByYear)[3] <- "Year of Registration"
-colnames(migByCitizCountryToTraffCountryByYear)[4] <- "Migration Count from Citizenship Country to Country of Exploitation"
+colnames(migByCitizCountryToTraffCountryByYear)[1:4] <- c("Country of Citizenship", 
+                                                          "Country of Exploitation", 
+                                                          "Year of Registration", 
+                                                          "Migration Count from Citizenship Country to Country of Exploitation")
 
 #Second, clean up and rename columns in migByCitizCountryToWorldByYear to match with manyNames_individual
 #Got rid of column "destination" with NULL command because destination is always WORLD
 migByCitizCountryToWorldByYear$destination <- NULL
-colnames(migByCitizCountryToWorldByYear)[1] <- "Country of Citizenship"
-colnames(migByCitizCountryToWorldByYear)[2] <- "Year of Registration"
-colnames(migByCitizCountryToWorldByYear)[3] <- "Migration Count from Citizenship Country to All Other Countries Combined"
+colnames(migByCitizCountryToWorldByYear)[1:3] <- c("Country of Citizenship", 
+                                                   "Year of Registration", 
+                                                   "Migration Count from Citizenship Country to All Other Countries Combined")
+
 
 #Third, clean up and rename columns in migByWORLDToTraffCountryByYear to match with manyNames_individual
-colnames(migByWORLDToTraffCountryByYear)[1] <- "Country of Exploitation"
-colnames(migByWORLDToTraffCountryByYear)[2] <- "Migration Count from All Countries Combined to Country of Exploitation"
-colnames(migByWORLDToTraffCountryByYear)[3] <- "Year of Registration"
+colnames(migByWORLDToTraffCountryByYear)[1:3] <- c("Country of Exploitation",
+                                                   "Migration Count from All Countries Combined to Country of Exploitation", 
+                                                   "Year of Registration")
+
 migByWORLDToTraffCountryByYear$'Year of Registration' <- as.character(migByWORLDToTraffCountryByYear$'Year of Registration')
 
 #Fourth, clean up and rename problematic columns in manyNames_individual
-colnames(manyNames_individual)[1] <- "Country of Exploitation (2L)"
-colnames(manyNames_individual)[2] <- "Country of Exploitation (3L)"
-colnames(manyNames_individual)[3] <- "Country of Exploitation"
-colnames(manyNames_individual)[4] <- "Country of Citizenship (2L)"
-colnames(manyNames_individual)[5] <- "Country of Citizenship (3L)"
-colnames(manyNames_individual)[6] <- "Country of Citizenship"
-colnames(manyNames_individual)[7] <- "Year of Registration"
+colnames(manyNames_individual)[1:7] <- c("Country of Exploitation (2L)",
+                                         "Country of Exploitation (3L)", 
+                                         "Country of Exploitation", 
+                                         "Country of Citizenship (2L)", 
+                                         "Country of Citizenship (3L)", 
+                                         "Country of Citizenship", 
+                                         "Year of Registration")
+
 
 #Fifth, left_join manyNames_individual and the datasets of the three migration flows
-manyNames_individual_test1 <- left_join(manyNames_individual, migByCitizCountryToTraffCountryByYear)
-manyNames_individual_test2 <- left_join(manyNames_individual_test1, migByCitizCountryToWorldByYear)
-manyNames_individual_test3 <- left_join(manyNames_individual_test2, migByWORLDToTraffCountryByYear)
+individual_merge <- manyNames_individual %>% 
+  left_join(migByCitizCountryToTraffCountryByYear) %>% 
+  left_join(migByCitizCountryToWorldByYear) %>% 
+  left_join(migByWORLDToTraffCountryByYear)
 
 
-#New name to merge! :)
-individual_merge <- manyNames_individual_test3
-View(individual_merge)
 
 
-write.csv(individual_merge, file = "individual_merge")
-#written in the Dev file
 
 #######################
 
@@ -601,6 +600,11 @@ big_merge_dataset <- left_join(big_merge, population_full_gathered_filterCitizCa
 big_merge_datasets <- left_join(big_merge_dataset, population_full_gathered_filterTraffCandYear)
 View(big_merge_datasets)
      
+
+
+write.csv(big_merge_datasets, file = paste(sure_path, 
+                                         '/data/big_merge_datasets.csv', sep = ''))
+#written to the data folder
 ```
 
 

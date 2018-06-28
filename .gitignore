@@ -4,3 +4,10 @@
 .Ruserdata
 .DS_Store
 data/*
+debugging.Rmd
+debugging.html
+error_example_planets.R
+error_example_plotting.R
+error_example_unit_test.R
+moar_planets.csv
+planets.csv
