@@ -507,8 +507,8 @@ View(individual_merge)
 
 #Imani (cont)
 ```{r}
-
- big_merge <- country_merge_exp %>% right_join(individual_merge,                                           by=(c("CountryofExploitation.y"="Country of Exploitation",
+require(individual_merge)
+ big_merge <- country_merge_exp %>% right_join(individual_merge,                                           by=(c("Country of Exploitation.y"="Country of Exploitation",
                                               "Year"="Year of Registration",
                                               "Country Code"="Country of Exploitation (3L)")))
  
