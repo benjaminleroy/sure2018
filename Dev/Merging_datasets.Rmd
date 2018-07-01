@@ -484,7 +484,7 @@ individual_merge <- manyNames_individual %>%
   left_join(migByWORLDToTraffCountryByYear)
 
 
-
+View(individual_merge)
 
 
 #######################
@@ -538,7 +538,11 @@ population_full <- linearly_interpolate(populationOrdered, list(3:70))
 
 population_full_gathered <- population_full %>% gather("Year", "Population in Year", 3:70)
 
-population_full_gathered$Year <- gsub('[a-z]+', '', pop_vec)
+
+
+population_full_gathered$Year <- gsub('[a-z]+', '', population_full_gathered$Year)
+
+
 
 #Removing ISO code, not needed it seems.
 population_full_gathered$`ISO 3166-1 numeric code` <- NULL
@@ -582,18 +586,21 @@ population_full_gathered_filterTraffCandYear <- popOfTraffCountryByYear
 
 #First, rename columns in population_full_gathered_filterCitizCandYear 
 colnames(population_full_gathered_filterCitizCandYear)[1] <- "Country of Citizenship.y"
-colnames(population_full_gathered_filterCitizCandYear)[2] <- "Year of Registration"
+colnames(population_full_gathered_filterCitizCandYear)[2] <- "Year"
 colnames(population_full_gathered_filterCitizCandYear)[3] <- "Population in Country of Citizenship"
 
 #Second, rename columns in population_full_gathered_filterTraffCandYear
 colnames(population_full_gathered_filterTraffCandYear)[1] <- "Country of Exploitation.y"
-colnames(population_full_gathered_filterTraffCandYear)[2] <- "Year of Registration"
+colnames(population_full_gathered_filterTraffCandYear)[2] <- "Year"
 colnames(population_full_gathered_filterTraffCandYear)[3] <- "Population in Country of Exploitation"
+
+
+
 
 
 big_merge_dataset <- left_join(big_merge, population_full_gathered_filterCitizCandYear)
 big_merge_datasets <- left_join(big_merge_dataset, population_full_gathered_filterTraffCandYear)
-View(big_merge_datasets)
+
      
 
 
