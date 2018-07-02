@@ -1,0 +1,34 @@
+---
+title: "Imputation - Imani"
+author: "Imani C."
+date: "July 1, 2018"
+output: html_document
+---
+
+```{r}
+library(mice)
+#seperates indv from other data
+merge_imp <-big_merge[27:80]
+#turns everything to a factor
+merge_imp<-as.data.frame(lapply(merge_imp,factor))
+
+#groups variables together
+controlgroup <-names(merge_imp)[6:23]
+
+labourgroup<-names(merge_imp)[31:43]
+
+relationgroup <- names(merge_imp)[50:54]
+
+
+ind_imp<- mice(merge_imp, maxit=0, blocks=list(c(controlgroup),c(labourgroup),c(relationgroup)))
+
+mat1<- ind_imp$predictorMatrix
+
+#takesout Sex/Labor varaible
+mat1[,24:27]<-0
+
+
+ind_imp2 <-mice(merge_imp, predictorMatrix = mat1, method="logreg", blocks = list(c(controlgroup),c(labourgroup),c(relationgroup)))
+
+ind_imp2
+```
