@@ -46,25 +46,24 @@ library(mice)
 library(tidyverse)
 
 
-View(big_merge_datasets)
+
 merged_as_ints <- big_merge_datasets 
-View(merged_as_ints)
 
 indvl_fullCNameCitizen_vec <- indvl_fullCNameCitizen[!duplicated(indvl_fullCNameCitizen)] %>% as.vector()
 indvl_fullCNameTraffick_vec <- indvl_fullCNameTraffick[!duplicated(indvl_fullCNameTraffick)] %>% as.vector()
 
-a <- factor(big_merge_datasets$`Country of Citizenship.y`, levels = indvl_fullCNameCitizen_vec)
-a <- a %>% as.integer()
-
+# a <- factor(big_merge_datasets$`Country of Citizenship.y`, levels = indvl_fullCNameCitizen_vec)
+# a <- a %>% as.integer()
+# 
 #merged_as_ints$`Country of Citizenship.y`<- a #Not sure if we even want this
 merged_as_ints$`Country of Citizenship.y` <- NULL
 merged_as_ints$`Country of Citizenship.x` <- NULL
 merged_as_ints$`Country Code` <- NULL
 merged_as_ints$`Country of Citizenship (2L)` <- NULL
 merged_as_ints$Year <- NULL
-
-b <- factor(big_merge_datasets$`Country of Exploitation.y`, levels = indvl_fullCNameTraffick_vec)
-b <- b %>% as.integer()
+# 
+# b <- factor(big_merge_datasets$`Country of Exploitation.y`, levels = indvl_fullCNameTraffick_vec)
+# b <- b %>% as.integer()
 #merged_as_ints$`Country of Exploitation.y`<- b #Not sure if we even want this
 merged_as_ints$`Country of Exploitation.y`<- NULL
 merged_as_ints$`Country of Exploitation.x` <- NULL
@@ -148,17 +147,16 @@ colnames(merged_as_ints) <- gsub(" ", "_", colnames(merged_as_ints))
 #cor(merged_as_ints, use="pairwise.complete.obs") doesn't work
  
 
-md_pattern <- md.pattern(merged_as_ints)
-p <- md.pairs(merged_as_ints)
-p$rr
-p$rm
-p$mr
-p$mm
+# md_pattern <- md.pattern(merged_as_ints)
+# p <- md.pairs(merged_as_ints)
+# p$rr
+# p$rm
+# p$mr
+# p$mm
 
-View(merged_as_ints)
+
 imp <- mice(merged_as_ints, maxit = 0, method = "logreg")
 p_mat <- imp$predictorMatrix
-
 
 names(merged_as_ints)
 
@@ -181,9 +179,10 @@ methods[] <- "logreg" # see methods in ?mice
 
 
 p_mat2 <- imp2$predictorMatrix       
-               
 
-               
+
+
+names(merged_as_ints)              
 
 imp3 <- mice(data = merged_as_ints, maxit = 0, predictorMatrix = p_mat2,
              method = methods,
@@ -213,14 +212,6 @@ View(complete_merged)
 # pmat[2,3:4] <- 0
 # pmat[1,1:2] <- 0
 
-nhanes3 <- nhanes3 %>% mutate(new = factor(new),
-                   new2 = factor(new2),
-                   new3 = factor(new3))
-
-ini3 <- mice(data = nhanes3, maxit = 0, predictorMatrix = pmat,
-             method = methods,
-             blocks = list(c("age", "bmi"), c("hyp", "chl"), c("new", "new2", "new3")))
-ini3
 
 
 
@@ -263,67 +254,172 @@ ini3
 
 
 
-imp$predictorMatrix
-
-imp$imp$meansOfControlDebtBondage #Chose any arbitrary variable, doesn't work...
-
-complete(imp)
-  
 
 
 
 
-
-View(merged_as_ints)
-na_matrix_merged <- sapply(big_merge_datasets, is.na)
-#covariance matrix for likihood of an NA in each column
-#na_cov_merged <- cov(na_matrix_merged)
-
-#correlation matrix for likihood of an NA in each column
-na_cor_merged <- cor(na_matrix_merged)
-na_cor_merged <- na_cor_merged[ , -c(4, 22:25, 78)]
-na_cor_merged <- na_cor_merged[-c(4, 22:25, 78), ]
-
-
-na_cor_merged <- na_cor_merged[ , -c]
-na_cor_merged <- na_cor_merged[-c, ]
-View(na_cor_merged)
+# View(merged_as_ints)
+# na_matrix_merged <- sapply(big_merge_datasets, is.na)
+# #covariance matrix for likihood of an NA in each column
+# #na_cov_merged <- cov(na_matrix_merged)
+# 
+# #correlation matrix for likihood of an NA in each column
+# na_cor_merged <- cor(na_matrix_merged)
+# na_cor_merged <- na_cor_merged[ , -c(4, 22:25, 78)]
+# na_cor_merged <- na_cor_merged[-c(4, 22:25, 78), ]
+# 
+# 
+# na_cor_merged <- na_cor_merged[ , -c]
+# na_cor_merged <- na_cor_merged[-c, ]
+# View(na_cor_merged)
 
 
 
 
 
 
-
-mice(big_merge_datasets)
-
-
-
-install.packages("ggcorrplot")
-library(ggcorrplot)
-ggcorrplot(na_cor_merged)
-
-install.packages("corrplot")
-library(corrplot)
-corrplot(na_cor_merged, method = "number")
-
-
-install.packages("GGally")
-library(GGally)
-
-ggpairs(big_merge_datasets, columns = 1:ncol(big_merge_datasets), title = "", axisLabels = "show", columnLabels = colnames(big_merge_datasets[, columns]))
-
-ggpairs(na_matrix_merged, cardinality_threshold = 77) 
-
-
-ggcorr(na_matrix_merged)
-
+# 
+# 
+# install.packages("ggcorrplot")
+# library(ggcorrplot)
+# ggcorrplot(na_cor_merged)
+# 
+# install.packages("corrplot")
+# library(corrplot)
+# corrplot(na_cor_merged, method = "number")
+# 
+# 
+# install.packages("GGally")
+# library(GGally)
+# 
+# ggpairs(big_merge_datasets, columns = 1:ncol(big_merge_datasets), title = "", axisLabels = "show", columnLabels = colnames(big_merge_datasets[, columns]))
+# 
+# ggpairs(na_matrix_merged, cardinality_threshold = 77) 
+# 
+# 
+# ggcorr(na_matrix_merged)
+# 
 
 #Some of the columns have no NA (and hence zero variance) which results in an undefined correlation
 #the below snippet removes those rows and columns
-View(individual)
-na_cor <- ((na_cor[-(1:3),-(1:3)])[-5,-5])[-c(49,54), -c(49,54)]
 
-na_cor_merged <- ((na_cor_merged[-(1:25), ]
+# 
+# # pmat[3,5:6] <- 0#
+# # pmat[2,3:4] <- 0
+# # pmat[1,1:2] <- 0
+# 
+# nhanes3 <- nhanes3 %>% mutate(new = factor(new),
+#                    new2 = factor(new2),
+#                    new3 = factor(new3))
+# 
+# ini3 <- mice(data = nhanes3, maxit = 0, predictorMatrix = pmat,
+#              method = methods,
+#              blocks = list(c("age", "bmi"), c("hyp", "chl"), c("new", "new2", "new3")))
+# ini3
+# 
+# 
+# 
+#     #
+# 
+# # merged_as_ints$Datasource <- NULL
+# # merged_as_ints$gender <- NULL
+# # merged_as_ints$majorityStatus <- NULL
+# # merged_as_ints$majorityEntry <- NULL
+# # merged_as_ints$majorityStatusAtExploit <- NULL
+# # 
+# # 
+# # 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # df <- data.frame(v1 = c(rep(1,5), rep(2,5)), v2 = c(rep(1, 10)), v3 = c(rep(1,3), rep(2,3), rep(3,4)))
+# # 
+# # df$v1 <- as.factor(df$v1)
+# # df$v2 <- as.factor(df$v2)
+# # df$v3 <- as.factor(df$v3)
+# # 
+# # length(levels(df$v1))
+# # length(levels(df$v2))
+# # length(levels(df$v3))
+# # 
+# # df[, sapply(df, function(col) length(levels(col))) > 1]
+# # 
+# # 
+# # 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# imp$predictorMatrix
+# 
+# imp$imp$meansOfControlDebtBondage #Chose any arbitrary variable, doesn't work...
+# 
+# complete(imp)
+#   
+# 
+# 
+# 
+# 
+# 
+# View(merged_as_ints)
+# na_matrix_merged <- sapply(big_merge_datasets, is.na)
+# #covariance matrix for likihood of an NA in each column
+# #na_cov_merged <- cov(na_matrix_merged)
+# 
+# #correlation matrix for likihood of an NA in each column
+# na_cor_merged <- cor(na_matrix_merged)
+# na_cor_merged <- na_cor_merged[ , -c(4, 22:25, 78)]
+# na_cor_merged <- na_cor_merged[-c(4, 22:25, 78), ]
+# 
+# 
+# na_cor_merged <- na_cor_merged[ , -c]
+# na_cor_merged <- na_cor_merged[-c, ]
+# View(na_cor_merged)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# mice(big_merge_datasets)
+# 
+# 
+# 
+# install.packages("ggcorrplot")
+# library(ggcorrplot)
+# ggcorrplot(na_cor_merged)
+# 
+# install.packages("corrplot")
+# library(corrplot)
+# corrplot(na_cor_merged, method = "number")
+# 
+# 
+# install.packages("GGally")
+# library(GGally)
+# 
+# ggpairs(big_merge_datasets, columns = 1:ncol(big_merge_datasets), title = "", axisLabels = "show", columnLabels = colnames(big_merge_datasets[, columns]))
+# 
+# ggpairs(na_matrix_merged, cardinality_threshold = 77) 
+# 
+# 
+# ggcorr(na_matrix_merged)
+# 
+# 
+# #Some of the columns have no NA (and hence zero variance) which results in an undefined correlation
+# #the below snippet removes those rows and columns
+# View(individual)
+# na_cor <- ((na_cor[-(1:3),-(1:3)])[-5,-5])[-c(49,54), -c(49,54)]
+# 
+# na_cor_merged <- ((na_cor_merged[-(1:25), ]
+
 ```
 
