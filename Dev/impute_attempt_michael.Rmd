@@ -198,6 +198,7 @@ imp3 <- mice(data = merged_as_ints, maxit = 0, predictorMatrix = p_mat2,
                            colnames(merged_as_ints)[63], 
                            colnames(merged_as_ints)[64:69], 
                            colnames(merged_as_ints)[70:72], 
+                           colnames((merged_as_ints)[73],
                            colnames(merged_as_ints)[74]))
 
 
