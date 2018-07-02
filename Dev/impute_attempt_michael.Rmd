@@ -148,12 +148,12 @@ colnames(merged_as_ints) <- gsub(" ", "_", colnames(merged_as_ints))
 #cor(merged_as_ints, use="pairwise.complete.obs") doesn't work
  
 
-md_pattern <- md.pattern(merged_as_ints)
-p <- md.pairs(merged_as_ints)
-p$rr
-p$rm
-p$mr
-p$mm
+# md_pattern <- md.pattern(merged_as_ints)
+# p <- md.pairs(merged_as_ints)
+# p$rr
+# p$rm
+# p$mr
+# p$mm
 
 View(merged_as_ints)
 imp <- mice(merged_as_ints, maxit = 0, method = "logreg")
@@ -211,7 +211,7 @@ complete_merged <- mice::complete(imp3)
 View(complete_merged)
 
 # 
-# # pmat[3,5:6] <- 0
+# # pmat[3,5:6] <- 0#
 # # pmat[2,3:4] <- 0
 # # pmat[1,1:2] <- 0
 # 
