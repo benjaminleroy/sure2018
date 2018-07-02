@@ -498,7 +498,9 @@ View(individual_merge)
 #Imani (cont)
 ```{r}
 
-View(country_merge_exp)
+
+
+
  big_merge <- country_merge_exp %>% right_join(individual_merge, 
                                                by=(c("Country of Exploitation.y"="Country of Exploitation",
                                               "Year"="Year of Registration",
@@ -510,7 +512,7 @@ big_merge <- country_merge_citz %>% right_join(big_merge,
                                               "Year"="Year",
                                               "Country Code"="Country of Citizenship (3L)"))) 
 
-View(big_merge)
+
 ```
 
 #Michael (cont)
