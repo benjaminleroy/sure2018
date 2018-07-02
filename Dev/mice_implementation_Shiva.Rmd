@@ -18,9 +18,9 @@ load("~/code/CMU/sure2018/data/merged_dataset.Rdata")
 colnames(big_merge_datasets) <- gsub(' ', '_', colnames(big_merge_datasets))
 
 
-p_mat <- mice(big_merge_datasets, maxit = 0)$predictorMatrix
+p_mat <- mice(big_merge_datasets[,22:78], maxit = 0)$predictorMatrix
 
-p_mat_blocks <- mice(big_merge_datasets, maxit = 0, 
+p_mat_blocks <- mice(big_merge_datasets[,22:78], maxit = 0, 
                      blocks = list(c("meansOfControlDebtBondage", 
                                      "meansOfControlTakesEarnings",
                                      "meansOfControlRestrictsFinancialAccess",
@@ -61,18 +61,13 @@ for(i in c(1, 3, 4, 6, 7)) {p_mat[blocks[[i]], blocks[[i]]] <- 0}
 
 #Ensures the variable outside the individual dataset aren't taken into account 
 #during imputation
-p_mat[, !(colnames(p_mat_blocks) %in% unlist(blocks))] <- 0
-p_mat[!(colnames(p_mat_blocks) %in% unlist(blocks)), ] <- 0
 
-p_mat_blocks[, !(colnames(p_mat_blocks) %in% unlist(blocks))] <- 0
-
-mice(data = big_merge_datasets, method = c(rep_len("", 29), rep_len("logreg", 43),
-                                           "", rep_len("logreg", 5), rep_len("", 5)),
+View(p_mat_blocks)
+ini <- mice(data = big_merge_datasets[,22:78],
      predictorMatrix = p_mat)
 
-mice(big_merge_datasets, method = c(rep_len("", 29), rep_len("logreg", 43),
-                                           "", rep_len("logreg", 5), rep_len("", 5)),
-     predictorMatrix = p_mat_blocks, blocks = list(c("meansOfControlDebtBondage", 
+ini_blocks <- mice(big_merge_datasets, predictorMatrix = p_mat_blocks,
+                   blocks = list(c("meansOfControlDebtBondage", 
                                      "meansOfControlTakesEarnings",
                                      "meansOfControlRestrictsFinancialAccess",
                                      "meansOfControlThreats",
@@ -106,5 +101,7 @@ mice(big_merge_datasets, method = c(rep_len("", 29), rep_len("logreg", 43),
                                      "recruiterRelationFriend",
                                      "recruiterRelationFamily", "recruiterRelationOther"),
                                    "recruiterRelationUnknown"))
+
+sum(sapply(big_merge_datasets, function(x) length(unique(na.omit(x))) == 0))
 ```
 
