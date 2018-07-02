@@ -1,0 +1,331 @@
+---
+title: "MICE"
+author: "Michael Wieck-Sosa"
+date: "July 1, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+```{r}
+#Load the merged data frame first 
+
+install.packages("psych")
+install.packages("Hmisc")
+install.packages("caret")
+install.packages("mice")
+install.packages("tidyverse")
+library(psych)
+library(Hmisc)
+library(caret)
+library(mice)
+library(tidyverse)
+
+
+View(big_merge_datasets)
+merged_as_ints <- big_merge_datasets 
+View(merged_as_ints)
+
+indvl_fullCNameCitizen_vec <- indvl_fullCNameCitizen[!duplicated(indvl_fullCNameCitizen)] %>% as.vector()
+indvl_fullCNameTraffick_vec <- indvl_fullCNameTraffick[!duplicated(indvl_fullCNameTraffick)] %>% as.vector()
+
+a <- factor(big_merge_datasets$`Country of Citizenship.y`, levels = indvl_fullCNameCitizen_vec)
+a <- a %>% as.integer()
+
+#merged_as_ints$`Country of Citizenship.y`<- a #Not sure if we even want this
+merged_as_ints$`Country of Citizenship.y` <- NULL
+merged_as_ints$`Country of Citizenship.x` <- NULL
+merged_as_ints$`Country Code` <- NULL
+merged_as_ints$`Country of Citizenship (2L)` <- NULL
+merged_as_ints$Year <- NULL
+
+b <- factor(big_merge_datasets$`Country of Exploitation.y`, levels = indvl_fullCNameTraffick_vec)
+b <- b %>% as.integer()
+#merged_as_ints$`Country of Exploitation.y`<- b #Not sure if we even want this
+merged_as_ints$`Country of Exploitation.y`<- NULL
+merged_as_ints$`Country of Exploitation.x` <- NULL
+merged_as_ints$`Country Code.y` <- NULL
+merged_as_ints$`Country of Exploitation (2L)` <- NULL
+
+colnames(merged_as_ints) <- gsub(" ", "_", colnames(merged_as_ints))
+
+# for (i in 1:nrow(merged_as_ints)) {
+#   if(merged_as_ints[i, 18] == "Case Management") {
+#     merged_as_ints[i, 18] = 0
+#   }
+#   else if (merged_as_ints[i, 18] == "Hotline") {
+#     merged_as_ints[i, 18] = 1
+#   }
+#   else {
+#     merged_as_ints[i, 18] = NA
+#   }
+# }
+# 
+# 
+# for (i in 1:nrow(merged_as_ints)) {
+#   if(merged_as_ints[i, 19] == "Female") {
+#     merged_as_ints[i, 19] = 0
+#   }
+#   else if ((merged_as_ints[i, 19] == "Male") {
+#     merged_as_ints[i, 19] = 1
+#   }
+#   else {
+#     merged_as_ints[i, 19] = NA
+#   }
+# }
+# 
+# 
+# for (i in 1:nrow(merged_as_ints)) {
+#   if(merged_as_ints[i, 21] == "Minor") {
+#     merged_as_ints[i, 21] = 0
+#   }
+#   else if (merged_as_ints[i, 21] == "Adult") {
+#     merged_as_ints[i, 21] = 1
+#   }
+#   else {
+#     merged_as_ints[i, 21] = NA
+#   }
+# }
+# for (i in 1:nrow(merged_as_ints)) {
+#   if(merged_as_ints[i, 22] == "Minor") {
+#     merged_as_ints[i, 22] = 0
+#   }
+#   else if (merged_as_ints[i, 22] == "Adult") {
+#     merged_as_ints[i, 22] = 1
+#   }
+#   else {
+#     merged_as_ints[i, 22] = NA
+#   }
+# }
+# 
+# for (i in 1:nrow(merged_as_ints)) {
+#   if(merged_as_ints[i, 23] == "Minor") {
+#     merged_as_ints[i, 23] = 0
+#   }
+#   else if (merged_as_ints[i, 23] == "Adult") {
+#     merged_as_ints[i, 23] = 1
+#   }
+#   else {
+#     merged_as_ints[i, 23] = NA
+#   }
+# }
+
+
+# merged_as_ints$Datasource <- merged_as_ints$Datasource %>% as.factor()
+# merged_as_ints$gender <- merged_as_ints$gender %>% as.factor()
+# merged_as_ints$majorityStatus <- merged_as_ints$majorityStatus %>% as.factor()
+# merged_as_ints$majorityEntry <- merged_as_ints$majorityEntry %>% as.factor()
+# merged_as_ints$majorityStatusAtExploit <- merged_as_ints$majorityStatusAtExploit %>% as.factor()
+
+#for now just get rid of them
+
+#cor.ci(merged_as_ints, method = "spearman") #Doesn't work..
+
+#cor(merged_as_ints, use="pairwise.complete.obs") doesn't work
+ 
+
+md_pattern <- md.pattern(merged_as_ints)
+p <- md.pairs(merged_as_ints)
+p$rr
+p$rm
+p$mr
+p$mm
+
+View(merged_as_ints)
+imp <- mice(merged_as_ints, maxit = 0, method = "logreg")
+p_mat <- imp$predictorMatrix
+
+
+names(merged_as_ints)
+
+imp2 <- mice(data = merged_as_ints, maxit = 0, 
+             blocks = list(colnames(merged_as_ints)[1:7], 
+                           colnames(merged_as_ints)[8:14], 
+                           colnames(merged_as_ints)[15],
+                           colnames(merged_as_ints)[16], 
+                           colnames(merged_as_ints)[17], 
+                           colnames(merged_as_ints)[18:20],
+                           colnames(merged_as_ints)[21:38], 
+                           colnames(merged_as_ints)[39:45], 
+                           colnames(merged_as_ints)[46:62], 
+                           colnames(merged_as_ints)[63], 
+                           colnames(merged_as_ints)[64:69], 
+                           colnames(merged_as_ints)[70:72], 
+                           colnames(merged_as_ints)[74]))
+methods <- imp2$method
+methods[] <- "logreg" # see methods in ?mice 
+
+
+p_mat2 <- imp2$predictorMatrix       
+
+#test
+               
+
+               
+
+imp3 <- mice(data = merged_as_ints, maxit = 0, predictorMatrix = p_mat2,
+             method = methods,
+             blocks = list(colnames(merged_as_ints)[1:7], 
+                           colnames(merged_as_ints)[8:14], 
+                           colnames(merged_as_ints)[15],
+                           colnames(merged_as_ints)[16], 
+                           colnames(merged_as_ints)[17], 
+                           colnames(merged_as_ints)[18:20],
+                           colnames(merged_as_ints)[21:38], 
+                           colnames(merged_as_ints)[39:45], 
+                           colnames(merged_as_ints)[46:62], 
+                           colnames(merged_as_ints)[63], 
+                           colnames(merged_as_ints)[64:69], 
+                           colnames(merged_as_ints)[70:72], 
+                           colnames(merged_as_ints)[74]))
+
+
+
+
+complete_merged <- mice::complete(imp3) 
+
+View(complete_merged)
+
+
+# pmat[3,5:6] <- 0
+# pmat[2,3:4] <- 0
+# pmat[1,1:2] <- 0
+
+nhanes3 <- nhanes3 %>% mutate(new = factor(new),
+                   new2 = factor(new2),
+                   new3 = factor(new3))
+
+ini3 <- mice(data = nhanes3, maxit = 0, predictorMatrix = pmat,
+             method = methods,
+             blocks = list(c("age", "bmi"), c("hyp", "chl"), c("new", "new2", "new3")))
+ini3
+
+
+
+    
+
+# merged_as_ints$Datasource <- NULL
+# merged_as_ints$gender <- NULL
+# merged_as_ints$majorityStatus <- NULL
+# merged_as_ints$majorityEntry <- NULL
+# merged_as_ints$majorityStatusAtExploit <- NULL
+# 
+# 
+# 
+
+
+
+
+
+
+
+# df <- data.frame(v1 = c(rep(1,5), rep(2,5)), v2 = c(rep(1, 10)), v3 = c(rep(1,3), rep(2,3), rep(3,4)))
+# 
+# df$v1 <- as.factor(df$v1)
+# df$v2 <- as.factor(df$v2)
+# df$v3 <- as.factor(df$v3)
+# 
+# length(levels(df$v1))
+# length(levels(df$v2))
+# length(levels(df$v3))
+# 
+# df[, sapply(df, function(col) length(levels(col))) > 1]
+# 
+# 
+# 
+
+
+
+
+
+
+
+
+imp$predictorMatrix
+
+imp$imp$meansOfControlDebtBondage #Chose any arbitrary variable, doesn't work...
+
+complete(imp)
+  
+
+
+
+
+
+View(merged_as_ints)
+na_matrix_merged <- sapply(big_merge_datasets, is.na)
+#covariance matrix for likihood of an NA in each column
+#na_cov_merged <- cov(na_matrix_merged)
+
+#correlation matrix for likihood of an NA in each column
+na_cor_merged <- cor(na_matrix_merged)
+na_cor_merged <- na_cor_merged[ , -c(4, 22:25, 78)]
+na_cor_merged <- na_cor_merged[-c(4, 22:25, 78), ]
+
+
+na_cor_merged <- na_cor_merged[ , -c]
+na_cor_merged <- na_cor_merged[-c, ]
+View(na_cor_merged)
+
+
+
+
+
+
+
+mice(big_merge_datasets)
+
+
+
+install.packages("ggcorrplot")
+library(ggcorrplot)
+ggcorrplot(na_cor_merged)
+
+install.packages("corrplot")
+library(corrplot)
+corrplot(na_cor_merged, method = "number")
+
+
+install.packages("GGally")
+library(GGally)
+
+ggpairs(big_merge_datasets, columns = 1:ncol(big_merge_datasets), title = "", axisLabels = "show", columnLabels = colnames(big_merge_datasets[, columns]))
+
+ggpairs(na_matrix_merged, cardinality_threshold = 77) 
+
+
+ggcorr(na_matrix_merged)
+
+
+#Some of the columns have no NA (and hence zero variance) which results in an undefined correlation
+#the below snippet removes those rows and columns
+View(individual)
+na_cor <- ((na_cor[-(1:3),-(1:3)])[-5,-5])[-c(49,54), -c(49,54)]
+
+na_cor_merged <- ((na_cor_merged[-(1:25), ]
+```
+
