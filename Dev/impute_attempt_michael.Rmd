@@ -34,11 +34,11 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 ```{r}
 #Load the merged data frame first 
 
-install.packages("psych")
-install.packages("Hmisc")
-install.packages("caret")
-install.packages("mice")
-install.packages("tidyverse")
+# install.packages("psych")
+# install.packages("Hmisc")
+# install.packages("caret")
+# install.packages("mice")
+# install.packages("tidyverse")
 library(psych)
 library(Hmisc)
 library(caret)
@@ -48,27 +48,27 @@ library(tidyverse)
 
 
 merged_as_ints <- big_merge_datasets 
-
-indvl_fullCNameCitizen_vec <- indvl_fullCNameCitizen[!duplicated(indvl_fullCNameCitizen)] %>% as.vector()
-indvl_fullCNameTraffick_vec <- indvl_fullCNameTraffick[!duplicated(indvl_fullCNameTraffick)] %>% as.vector()
+# 
+# indvl_fullCNameCitizen_vec <- indvl_fullCNameCitizen[!duplicated(indvl_fullCNameCitizen)] %>% as.vector()
+# indvl_fullCNameTraffick_vec <- indvl_fullCNameTraffick[!duplicated(indvl_fullCNameTraffick)] %>% as.vector()
 
 # a <- factor(big_merge_datasets$`Country of Citizenship.y`, levels = indvl_fullCNameCitizen_vec)
 # a <- a %>% as.integer()
 # 
 #merged_as_ints$`Country of Citizenship.y`<- a #Not sure if we even want this
-merged_as_ints$`Country of Citizenship.y` <- NULL
-merged_as_ints$`Country of Citizenship.x` <- NULL
-merged_as_ints$`Country Code` <- NULL
-merged_as_ints$`Country of Citizenship (2L)` <- NULL
-merged_as_ints$Year <- NULL
+# merged_as_ints$`Country of Citizenship.y` <- NULL
+# merged_as_ints$`Country of Citizenship.x` <- NULL
+# merged_as_ints$`Country Code` <- NULL
+# merged_as_ints$`Country of Citizenship (2L)` <- NULL
+# merged_as_ints$Year <- NULL
 # 
 # b <- factor(big_merge_datasets$`Country of Exploitation.y`, levels = indvl_fullCNameTraffick_vec)
 # b <- b %>% as.integer()
 #merged_as_ints$`Country of Exploitation.y`<- b #Not sure if we even want this
-merged_as_ints$`Country of Exploitation.y`<- NULL
-merged_as_ints$`Country of Exploitation.x` <- NULL
-merged_as_ints$`Country Code.y` <- NULL
-merged_as_ints$`Country of Exploitation (2L)` <- NULL
+# merged_as_ints$`Country of Exploitation.y`<- NULL
+# merged_as_ints$`Country of Exploitation.x` <- NULL
+# merged_as_ints$`Country Code.y` <- NULL
+# merged_as_ints$`Country of Exploitation (2L)` <- NULL
 
 colnames(merged_as_ints) <- gsub(" ", "_", colnames(merged_as_ints))
 
@@ -155,27 +155,41 @@ colnames(merged_as_ints) <- gsub(" ", "_", colnames(merged_as_ints))
 # p$mm
 
 
+
+# df <- data.frame(v1 = c(rep(1,5), rep(2,5)), v2 = c(rep(1, 10)), v3 = c(rep(1,3), rep(2,3), rep(3,4)))
+# 
+# df$v1 <- as.factor(df$v1)
+# df$v2 <- as.factor(df$v2)
+# df$v3 <- as.factor(df$v3)
+# 
+# length(levels(df$v1))
+# length(levels(df$v2))
+# length(levels(df$v3))
+# 
+# df[, sapply(df, function(col) length(levels(col))) > 1]
+# 
+# 
+# View(merged_as_ints)
+
+
+
 imp <- mice(merged_as_ints, maxit = 0, method = "logreg")
 p_mat <- imp$predictorMatrix
 
 names(merged_as_ints)
+View(merged_as_ints)
+imp2 <- mice(data = merged_as_ints, maxit = 0, method = "logreg",
+             blocks = list(colnames(merged_as_ints)[30:46], 
+                           colnames(merged_as_ints)[26 & 27 & 47 & 73], 
+                           colnames(merged_as_ints)[52:54 & 72],
+                           colnames(merged_as_ints)[55:67 & 69 & 70 & 71],
+                           colnames(merged_as_ints)[48 & 49 & 51 & 68 & 29 & 28],  
+                           colnames(merged_as_ints)[69:71], 
+                           colnames(merged_as_ints)[50], 
+                           colnames(merged_as_ints)[74:77]))
 
-imp2 <- mice(data = merged_as_ints, maxit = 0, 
-             blocks = list(colnames(merged_as_ints)[1:7], 
-                           colnames(merged_as_ints)[8:14], 
-                           colnames(merged_as_ints)[15],
-                           colnames(merged_as_ints)[16], 
-                           colnames(merged_as_ints)[17], 
-                           colnames(merged_as_ints)[18:20],
-                           colnames(merged_as_ints)[21:38], 
-                           colnames(merged_as_ints)[39:45], 
-                           colnames(merged_as_ints)[46:62], 
-                           colnames(merged_as_ints)[63], 
-                           colnames(merged_as_ints)[64:69], 
-                           colnames(merged_as_ints)[70:72], 
-                           colnames(merged_as_ints)[74]))
 methods <- imp2$method
-methods[] <- "logreg" # see methods in ?mice 
+# methods[] <- "logreg" # see methods in ?mice 
 
 
 p_mat2 <- imp2$predictorMatrix       
@@ -186,20 +200,14 @@ names(merged_as_ints)
 
 imp3 <- mice(data = merged_as_ints, maxit = 0, predictorMatrix = p_mat2,
              method = methods,
-             blocks = list(colnames(merged_as_ints)[1:7], 
-                           colnames(merged_as_ints)[8:14], 
-                           colnames(merged_as_ints)[15],
-                           colnames(merged_as_ints)[16], 
-                           colnames(merged_as_ints)[17], 
-                           colnames(merged_as_ints)[18:20],
-                           colnames(merged_as_ints)[21:38], 
-                           colnames(merged_as_ints)[39:45], 
-                           colnames(merged_as_ints)[46:62], 
-                           colnames(merged_as_ints)[63], 
-                           colnames(merged_as_ints)[64:69], 
-                           colnames(merged_as_ints)[70:72], 
-                           colnames((merged_as_ints)[73],
-                           colnames(merged_as_ints)[74]))
+             blocks = list(colnames(merged_as_ints)[30:46], 
+                           colnames(merged_as_ints)[26 & 27 & 47 & 73], 
+                           colnames(merged_as_ints)[52:54 & 72],
+                           colnames(merged_as_ints)[55:67 & 69 & 70 & 71],
+                           colnames(merged_as_ints)[48 & 49 & 51 & 68 & 29 & 28],  
+                           colnames(merged_as_ints)[69:71], 
+                           colnames(merged_as_ints)[50], 
+                           colnames(merged_as_ints)[74:77]))
 
 
 
