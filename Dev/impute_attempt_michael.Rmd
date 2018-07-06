@@ -105,7 +105,19 @@ merged_as_ints <- big_merge_datasets
 # [1] NA  1
 
 
+
+
 #Only NAs: "isForcedMilitary","isOrganRemoval","typeOfLabourIllicitActivities","typeOfLabourMiningOrDrilling","typeOfLabourTransportation","typeOfSexRemoteInteractiveServices"
+
+
+#RE DO THE NAS AND MEANS OF CONTROL AFTER DOING THE FILL NAS .....
+
+# MAYBE WE KNOW WHAT THE VALUE ACTUALLY IS 
+
+#RECRUITER RELATIONSHIP AD IS ABUDCTION IN THE SAME BLOCK
+#IS ABDUCTION SHOULD BE IN ITS OWN GROUP IN THE BLOCK
+
+
 merged_as_ints$isForcedMilitary <- NULL
 merged_as_ints$isOrganRemoval <- NULL
 merged_as_ints$typeOfLabourIllicitActivities <- NULL
@@ -140,7 +152,7 @@ merged_dataset <- merged_as_ints
 #If you had to group in 3 groups: 
 #"means of control" (columns 30 to 47)
 #"type of exploit" (columns 48 to 66)
-#"relationship" (columns 67 to 72)
+#"recuiter relationship" (columns 67 to 72)
 imp2 <- mice(data = merged_dataset, maxit = 0, method = "logreg",
               blocks = list(colnames(merged_as_ints)[30:47], 
                             colnames(merged_as_ints)[48:66], 
@@ -175,7 +187,7 @@ p_mat2 <- imp2$predictorMatrix
 #If you had to group in 3 groups: 
 #"means of control" (columns 30 to 47)
 #"type of exploit" (columns 48 to 66)
-#"relationship" (columns 67 to 72)
+#"recruiter relationship" (columns 67 to 72)
 imp3 <- mice(data = merged_dataset, maxit = 0, predictorMatrix = p_mat2,
              method = methods,
              blocks = list(colnames(merged_as_ints)[30:47], 
@@ -189,6 +201,28 @@ complete_merged <- mice::complete(imp3)
 
 View(complete_merged)
 
+
+#take out country names 
+#take out unnecessary things telling us things about the individual
+#leave in some things like the country has a low gdp, high poverty rate, high trafficking rate, tier, etc
+#imputation doesn't do too well if it has too many variables
+#blocks hasve variables that are related to eachother that are not randomly assigned
+#dont include things that are randomly assigned, like some implies that there will be nas everywhere else, buso don't include recruiter relationship unknown, type of labor unknnown, or other wones that are, 
+#make means of control, type of exploit, recruiter relationship
+#fill in 0s for a row with a 1 in the other group using shiva's fill na function
+#use grep to find the names of the columns to identify the types of labor 
+
+
+
+
+#leave out variables like "non-specified" because if it is 1 then the value is not stated...
+#or the other way around, if the other values are not 
+#maybe remove not specified because it is not valuable because either the values are zero or one and if we ipute then we get 0s anyways....
+#for each block you can only use one type of imputation model.....
+#you use the method for each group in the block....
+#send ben the blocks and send him what you would like to use for the blocks
+#the whole block has to have the same regression....'
+#
 
 ```
 
