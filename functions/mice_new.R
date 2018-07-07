@@ -1,10 +1,13 @@
 library(mice)
 library(tidyverse)
 # functions not really in order - see the bottom for example of running the 
-# only really import function (mice_new).
+# only really import function (`mice_new`).
 #
 # runs smoothly (though I need to do a few more checks if I'm a good person)
 # ~ 11:42 pm, 6 July 2018
+#
+# Note: you will also be directly using the `correct_data` function to alter
+# the data from the "corrected_data" parameter in `mice_new`.
 
 
 
