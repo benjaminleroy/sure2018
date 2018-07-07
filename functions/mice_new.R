@@ -1,5 +1,6 @@
 library(mice)
 library(tidyverse)
+library(reshape2)
 # functions not really in order - see the bottom for example of running the 
 # only really import function (`mice_new`).
 #
@@ -23,8 +24,9 @@ library(tidyverse)
 # block = list of blocks (same as in mice::mice)
 # predictorMatrix = predictor matrix (same as in mice::mice)
 # method = vector of methods for each block element
-# 
 # verbose = logical statement if report processing for each variable to impute
+# where = locations where you'd like to predict replacements (matrix where NAs 
+#   were in original dataset)
 #
 # Returns:
 # --------
@@ -34,7 +36,8 @@ mice_problem_na <- function(data, data_corrected = correct_data(data),
                             blocks = mice::make.blocks(data),
                             predictorMatrix = mice::make.predictorMatrix(
                               data = data),
-                            method = NULL, verbose = TRUE){
+                            method = NULL, verbose = TRUE,
+                            where = is.na(data)){
   
   pMat_and_methods <- get_methods_for_full_block(predMatrix = predictorMatrix,
                                                  data = data,
@@ -48,7 +51,6 @@ mice_problem_na <- function(data, data_corrected = correct_data(data),
   var_names <- rownames(large_pMat)
   
   #storage_df <- data
-  where <- is.na(data)
   nmis <- data %>% sapply(function(x) sum(is.na(x)))
   
   imp <- list()
@@ -103,15 +105,17 @@ mice_problem_na <- function(data, data_corrected = correct_data(data),
       single_mice_run <- try(mice(m = 1, maxit = 1, data = inner_df, 
                               predictorMatrix = inner_pMat,
                               blocks = inner_block,printFlag = FALSE,
-                              method = full_methods[y_name]))
+                              method = full_methods[y_name],
+                              where = where))
       
       if (class(single_mice_run) == "try-error" &
           full_methods[y_name] == "pmm") {
         cat("error in running pmm, switch to rf")
         single_mice_run <- mice(m = 1, maxit = 1, data = inner_df, 
-                                    predictorMatrix = inner_pMat,
-                                    blocks = inner_block,printFlag = FALSE,
-                                    method = "rf")
+                                predictorMatrix = inner_pMat,
+                                blocks = inner_block,printFlag = FALSE,
+                                method = "rf",
+                                where = where)
       }
       imp[[y_name]] <- single_mice_run$imp[[y_name]]
       formulas[[y_name]] <- single_mice_run$formulas[[y_name]]
@@ -431,28 +435,33 @@ get_methods_for_full_block <- function(predMatrix, data, blocks,
 #
 # Args:
 # -----
-# data = data frame (n x p) with NAs
-# data_corrected = data frame (n x p) with similar structure to data, but some 
-#   NAs are expected to be filled in
+# data_list = list of data sets for each of the mutliple imputation chains 
 # block = list of blocks (same as in mice::mice)
 # predictorMatrix = predictor matrix (same as in mice::mice)
 # method = vector of methods for each block element
 # seed = for randomization 
 # m = number of imputations occuring "concurrently"
 # verbose = logical statement if report processing for each variable to impute
+# where = locations where you'd like to predict replacements (matrix where NAs 
+#   were in original dataset)
 #
 # Returns:
 # --------
 # out = a list of lists, each that has same information as a mice::mids object, 
 # see names in said lists and mice::mice()
 mice_multiple_imputations_one_iter2 <- function(data_list,
-                                blocks = mice::make.blocks(data),
+                                blocks = mice::make.blocks(data_list[[1]]$data),
                                 predictorMatrix = mice::make.predictorMatrix(
-                                  data = data),
+                                  data = data_list[[1]]$data),
                                 method = NULL,
                                 seed = 1,
-                                m = 5, verbose = FALSE){
+                                m = 5, verbose = FALSE,
+                                where = is.na(data_list[[1]]$data)){
   set.seed(seed)
+  
+  if (length(data_list) != m) {
+    stop("data_list and m parameters don't match")
+  }
   
   new_df_list <- list()
   for (iter in seq_len(m)) {
@@ -461,7 +470,8 @@ mice_multiple_imputations_one_iter2 <- function(data_list,
                               blocks = blocks,
                               predictorMatrix = predictorMatrix,
                               method = method,
-                              verbose = verbose) 
+                              verbose = verbose,
+                              where = where) 
     cat("\n")
   }
   return(new_df_list)
@@ -484,6 +494,8 @@ mice_multiple_imputations_one_iter2 <- function(data_list,
 # m = number of imputations occuring "concurrently"
 # maxit = maximum number of iterations
 # verbose = logical statement if report processing for each variable to impute
+# where = locations where you'd like to predict replacements (matrix where NAs 
+#   were in original dataset)
 #
 # Returns:
 # --------
@@ -497,19 +509,21 @@ mice_new <- function(data, data_corrected = correct_data(data),
                      method = NULL,
                      seed = 1,
                      m = 5, maxit = 5,
-                     verbose = FALSE){
+                     verbose = FALSE,
+                     where = is.na(data)){
  if (ceiling(maxit) != floor(maxit) |
     maxit < 1) {
    stop("maxit needs to be positive real number")
  }
   
   initial_data_storage <- list()
-  initial_data_storage[["0"]] <- lapply(1:maxit, function(x){
+  initial_data_storage[["0"]] <- lapply(1:m, function(x){
                                 list(data = data,
                                      data_corrected = data_corrected)}) 
   cat("starting mice approach \n")
   for (i in 1:maxit) {
     cat(paste0("iteration: ", i, "\n"))
+    #browser()
     initial_data_storage[[as.character(i)]] <- 
       mice_multiple_imputations_one_iter2(
         data_list = initial_data_storage[[as.character(i - 1)]],
@@ -518,19 +532,165 @@ mice_new <- function(data, data_corrected = correct_data(data),
         method = method,
         seed = seed,
         m = m,
-        verbose = verbose)
+        verbose = verbose,
+        where = where)
   }
   return(initial_data_storage)
 }
 
+# cleans up `mice_new` output to store all the data sets throught the multiple
+#   imputations and provide a "mids" like object for the multiple imputation
+#
+# Args:
+# -----
+# mice_new_output = the return of `mice_new` (a list of lists of lists)
+# 
+# Returns:
+# --------
+# a list of 2 items:
+# data_list = a list of data for each step, with both the data and the 
+#   corrected_datadata_list
+# mids = mice:mids style formated list of information
+mice_new_cleanup <- function(mice_new_output) {
+  mice_formated_out <- list()
+  
+  m = mice_new_output[[1]] %>% length()
+  mice_formated_out$m <- m
+  
+  maxit = length(mice_new_output) - 1
+  mice_formated_out$iteration <- maxit
+  
+  mice_formated_out$data <- mice_new_output[[2]][[1]]$data
+  mice_formated_out$where <- mice_new_output[[2]][[1]]$where
+  mice_formated_out$call <- mice_new_output[[2]][[1]]$call
+  mice_formated_out$nmis <- mice_new_output[[2]][[1]]$nmis
+  mice_formated_out$blots <- mice_new_output[[2]][[1]]$blots
+  mice_formated_out$version <- mice_new_output[[2]][[1]]$version
+  mice_formated_out$date <- mice_new_output[[2]][[1]]$date
+  mice_formated_out$blocks <- mice_new_output[[2]][[1]]$blocks
+  mice_formated_out$method <- mice_new_output[[2]][[1]]$method
+  
+  
+  data_list <- list()
+  
+  
+  
+  chainMean <- array(NA,
+                     dim =  c(
+                       dim(mice_new_output[[2]][[1]]$chainMean)[1],
+                       maxit,
+                       m),
+                     dimnames = list(
+                       dimnames(mice_new_output[[2]][[1]]$chainMean)[[1]],
+                       1:maxit,
+                       paste("Chain",1:m)
+                     ))
+  chainVar <- chainMean
+  
+  for (iter in names(mice_new_output)) {
+    # data_list
+    data_list[[iter]] <- list()
+    for (m_idx in 1:m) {
+      data_list[[iter]][[m_idx]] <- list(
+        data = mice_new_output[[iter]][[m_idx]]$data,
+        data_corrected = mice_new_output[[iter]][[m_idx]]$data_corrected
+      )
+      }
+    
+    # mice_formated_out
+    imp <- list()
 
+    
+    if (iter != 0) {
+      integer_iter <- as.numeric(iter)
+    
+      for (col in names(mice_new_output[[iter]]$imp)) {
+        # imp
+        imp[[col]] <- matrix(NA, 
+                             ncol = m, 
+                             nrow = nrow(mice_new_output[[iter]]$imp[[col]]))
+        for (m_idx in 1:m) {
+          imp[[col]][,m_idx] <- mice_new_output[[iter]]$imp[[col]]
+        }
+      }
+      mice_formated_out$imp <- imp
+      
+      # predictorMatrix, visitSequence, formulas, lastSeedValue, seed
+      for (m_idx in 1:m) {
+        mice_formated_out$predictorMatrix <- mice_new_output[[iter]][[m_idx]]$predictorMatrix
+        mice_formated_out$visitSequence <- mice_new_output[[iter]][[m_idx]]$visitSequence
+        mice_formated_out$formulas <- mice_new_output[[iter]][[m_idx]]$formulas
+        mice_formated_out$lastSeedValue <- mice_new_output[[iter]][[m_idx]]$lastSeedValue
+        mice_formated_out$seed <- mice_new_output[[iter]][[m_idx]]$seed
+        mice_formated_out$post <- mice_new_output[[iter]][[m_idx]]$post
+        mice_formated_out$loggedEvents <- mice_new_output[[iter]][[m_idx]]$loggedEvents
+      }
+      
+      # chainMean, chainVar
+      
+      for (m_idx in 1:m) {
+        chainMean[,integer_iter,m_idx] <- mice_new_output[[iter]][[m_idx]]$chainMean
+        chainVar[,integer_iter,m_idx] <- mice_new_output[[iter]][[m_idx]]$chainVar
+        }
+    }
+  }
+  
+  mice_formated_out$chainMean <- chainMean
+  mice_formated_out$chainVar <- chainVar
+  
+  class(mice_formated_out) = "mids"
+  return(list(data_list = data_list, mids = mice_formated_out))
+}
+  
 
-### code example: 
-# running2e <- mice_new(data = data_proxy,
-#                      data_corrected = correct_data(data_proxy,
-#                                                    option = "empirical"),
+# visualization of chains (either chainVar or ChainMean) array,
+#   Note: it is wise to select a subset of var_names if there is a lot
+# 
+# Args:
+# -----
+# chain_array = in the mice:mice's chainVar or ChainMean make-up (3d array)
+# var_names = vector of strings of variables we will visualize
+# nrow = number of rows in the visualization
+#
+# Returns:
+# --------
+# ggplot object
+vis_chain <- function(chain_array, var_names = NULL, nrow = NULL){
+  if (is.null(var_names)) {
+    var_names <- dimnames(chain_array)[[1]]
+  }
+  
+  if (is.null(nrow)) {
+    nrow = var_names %>% length %>%
+      sqrt %>% ceiling %>% as.integer  
+    }
+  
+  melt_df <- chain_array %>% melt() %>% 
+    filter(Var1 %in% var_names)
+
+  ggout <- ggplot(melt_df, aes(x = Var2, y = value,
+                               color = Var3)) +
+    geom_line() + facet_wrap(~ Var1, nrow = nrow, scales = "free") +
+    geom_point() +
+    labs(x = "iteration")
+  
+  return(ggout)
+}
+
+### code example ------------------------------------------------
+# running2 <- mice_new(data = data_proxy,
+#                      data_corrected = correct_data(data_proxy),
 #                             blocks = complete_blocks,
 #                             method = complete_methods,
 #                             predictorMatrix = complete_pMat,
 #                             seed = 4909,
-#                             m = 2, maxit = 2, verbose = TRUE) 
+#                             m = 2, maxit = 4, verbose = FALSE)
+# 
+# 
+# test <- mice_new_cleanup(running2)
+# chain_array <- test$mids$chainMean
+# chain_array2 <- test$mids$chainVar
+# num_vars <- dim(chain_array)[[1]]
+# var_names <- dimnames(chain_array)[[1]][sample(num_vars, 10)]
+# vis_chain(chain_array, var_names) # takes around 15 seconds
+# vis_chain(chain_array2, var_names) # takes around 15 seconds
