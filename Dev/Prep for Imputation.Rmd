@@ -7,6 +7,12 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+
+
+
+
+
 Loading everything:
 ```{r}
 library(reshape2)
@@ -61,6 +67,12 @@ recruiter_not_specified <- recruitergroup[length(recruitergroup)]
 recruitergroup <- recruitergroup[-length(recruitergroup)]
 recruitergroup <- append(recruitergroup, "isAbduction")
 
+imp_dataset_names<-colnames(big_merge_dataset)
+
+controlgroup<-  grep("meansOfControl+",imp_dataset_names, value=TRUE)
+control_not_specified <- controlgroup[length(controlgroup)]
+controlgroup <- controlgroup[-length(controlgroup)]
+
 labourgroup <- grep("typeOfLabour+",imp_dataset_names, value=TRUE)
 #removing not specified 
 labourgroup_not_specified <- labourgroup[length(labourgroup)]
@@ -108,4 +120,5 @@ vis_chain(chain_array2, var_names) # takes around 15 seconds
 
 
 ```
+
 
