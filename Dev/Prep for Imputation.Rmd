@@ -79,9 +79,9 @@ block_list<-list(controlgroup, control_not_specified, recruitergroup, recruiter_
 
 #Constructing the predictorMatrix
 ```{r}
-pred_matrix <- mice::make.predictorMatrix(big_merge_datasets, block_list)
+ini <- mice(big_merge_datasets, blocks = block_list, maxit = 0)
+pred_matrix <- ini$predictorMatrix
 #View(pred_matrix)
-row.names(pred_matrix)<- paste("B", 1:nrow(pred_matrix), sep = "")
 
 pred_matrix[,-(22:72)] <- 0
 
