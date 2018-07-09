@@ -67,7 +67,7 @@ recruiter_not_specified <- recruitergroup[length(recruitergroup)]
 recruitergroup <- recruitergroup[-length(recruitergroup)]
 recruitergroup <- append(recruitergroup, "isAbduction")
 
-imp_dataset_names<-colnames(big_merge_dataset)
+imp_dataset_names<-colnames(big_merge_datasets)
 
 controlgroup<-  grep("meansOfControl+",imp_dataset_names, value=TRUE)
 control_not_specified <- controlgroup[length(controlgroup)]
