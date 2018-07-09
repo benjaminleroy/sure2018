@@ -7,10 +7,105 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Loading everything:
+```{r}
+library(reshape2)
+library(tidyverse)
+library(mice)
+
+sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
+source(paste(sure_path, "/functions/mice_new.R", sep = ""))
+source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
+
+#put name of data file here:
+data_file <- "/merged_dataset.Rdata"
+load(paste(sure_path, "/data" , data_file, sep = ""))
+```
 
 
-
+#Running fill_in_nas
 
 ```{r}
+#some initial clean up of the dataset
+cols_to_remove <- c("isForcedMilitary","isOrganRemoval","typeOfLabourIllicitActivities",
+                    "typeOfLabourMiningOrDrilling","typeOfLabourTransportation",
+                    "typeOfSexRemoteInteractiveServices")
+big_merge_datasets[, cols_to_remove] <- NULL
+
+#mice doesn't like column names with spaces in them
+colnames(big_merge_datasets) <- gsub(' ', '_', colnames(big_merge_datasets))
+
+#parentheses makes R try to do a function call
+colnames(big_merge_datasets)[22:23] <- c("Country_of_Exploit_2L", "Country_of_Citizenship_2L")
+
+
+#
+for(i in list(30:46, 49:52, 53:61, 68:71)){
+  big_merge_datasets <- fill_in_nas(big_merge_datasets, i)
+}
+```
+
+
+#Blocks for imputation
+```{r}
+imp_dataset_names<-colnames(big_merge_datasets)
+
+controlgroup <-  grep("meansOfControl+",imp_dataset_names, value=TRUE)
+#take out not specified
+control_not_specified <- controlgroup[length(controlgroup)]
+controlgroup <- controlgroup[-length(controlgroup)]
+
+recruitergroup <- grep("recruiter+", imp_dataset_names, ignore.case = FALSE, value=TRUE)
+#removing not specified
+recruiter_not_specified <- recruitergroup[length(recruitergroup)]
+recruitergroup <- recruitergroup[-length(recruitergroup)]
+recruitergroup <- append(recruitergroup, "isAbduction")
+
+labourgroup <- grep("typeOfLabour+",imp_dataset_names, value=TRUE)
+#removing not specified 
+labourgroup_not_specified <- labourgroup[length(labourgroup)]
+labourgroup <- labourgroup[-length(labourgroup)]
+labourgroup <- append(labourgroup, "isForcedLabour")
+
+sexgroup<-grep("typeOfSex+", imp_dataset_names, ignore.case = FALSE, value=TRUE)
+sexgroup<-append(sexgroup, c("isSexualExploit","isForcedMarriage"))
+
+
+block_list<-list(controlgroup, control_not_specified, recruitergroup, recruiter_not_specified,
+                 labourgroup, labourgroup_not_specified, sexgroup, "isOtherExploit",
+                 "isSexAndLabour")
+```
+
+
+#Constructing the predictorMatrix
+```{r}
+pred_matrix <- mice::make.predictorMatrix(big_merge_datasets, block_list)
+#View(pred_matrix)
+row.names(pred_matrix)<- paste("B", 1:nrow(pred_matrix), sep = "")
+
+pred_matrix[,-(22:72)] <- 0
+
+for(i in 1:length(block_list)){
+  pred_matrix[i, block_list[[i]]] <- 0
+}
+```
+
+#Running mice_new
+```{r}
+test_run <- mice_new(big_merge_datasets, blocks = block_list, 
+                     predictorMatrix = pred_matrix, seed = 1729,
+                     m = 5, maxit = 5)
+
+test <- mice_new_cleanup(test_run)
+
+chain_array <- test$mids$chainMean
+chain_array2 <- test$mids$chainVar
+num_vars <- dim(chain_array)[[1]]
+var_names <- dimnames(chain_array)[[1]][sample(num_vars, 10)]
+vis_chain(chain_array, var_names) # takes around 15 seconds
+vis_chain(chain_array2, var_names) # takes around 15 seconds
+
+
+
 ```
 
