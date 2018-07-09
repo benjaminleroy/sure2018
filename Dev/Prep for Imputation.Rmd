@@ -8,24 +8,49 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-There are three groups in which we can use the fill NA function.
 
-Some of these columns should be taken out as there is no information inserted to them at all. this includes meansOfControl: TakesEarning, RestrictsFinaicialfAccess, Threats, PsychologicalAbuse, Physical Abuse ect.  
+
+
+
+=======
+Loading everything:
+```{r}
+library(reshape2)
+library(tidyverse)
+library(mice)
+
+sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
+source(paste(sure_path, "/functions/mice_new.R", sep = ""))
+source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
+
+#put name of data file here:
+data_file <- "/merged_dataset.Rdata"
+load(paste(sure_path, "/data" , data_file, sep = ""))
+```
+
+
+#Running fill_in_nas
 
 ```{r}
-imp_dataset <- big_merge_datasets[,-c((33:37),(41:48))]
+
+```
+
+
+#Blocks for imputation
+```{r}
+
+imp_dataset_names<-colnames(big_merge_dataset)
+
+controlgroup<-  grep("meansOfControl+",imp_dataset_names, value=TRUE)
+
 
 
 ```
 
+
+#Running mice_new
 ```{r}
-imp_dataset_names <- colnames(imp_dataset)
-fill_control <- grep("meansOfControl+",imp_dataset_names, value=TRUE)
 
-fill_control[-c(5),1]
-``` 
-
-
-
+```
 
 
