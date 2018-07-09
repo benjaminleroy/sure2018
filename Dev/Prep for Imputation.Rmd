@@ -7,3 +7,37 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Loading everything:
+```{r}
+library(reshape2)
+library(tidyverse)
+library(mice)
+
+sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
+source(paste(sure_path, "/functions/mice_new.R", sep = ""))
+source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
+
+#put name of data file here:
+data_file <- "/merged_dataset.Rdata"
+load(paste(sure_path, "/data" , data_file, sep = ""))
+```
+
+
+#Running fill_in_nas
+
+```{r}
+
+```
+
+
+#Blocks for imputation
+```{r}
+
+```
+
+
+#Running mice_new
+```{r}
+
+```
+
