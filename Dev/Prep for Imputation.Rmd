@@ -7,37 +7,38 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Loading everything:
+
+
+
+#Michael
 ```{r}
-library(reshape2)
-library(tidyverse)
-library(mice)
+merged_as_ints <- big_merge_datasets 
 
-sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
-source(paste(sure_path, "/functions/mice_new.R", sep = ""))
-source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
+#Only NAs: "isForcedMilitary","isOrganRemoval","typeOfLabourIllicitActivities","typeOfLabourMiningOrDrilling","typeOfLabourTransportation","typeOfSexRemoteInteractiveServices"
+merged_as_ints$isForcedMilitary <- NULL
+merged_as_ints$isOrganRemoval <- NULL
+merged_as_ints$typeOfLabourIllicitActivities <- NULL
+merged_as_ints$typeOfLabourMiningOrDrilling <- NULL
+merged_as_ints$typeOfLabourTransportation <- NULL
+merged_as_ints$typeOfSexRemoteInteractiveServices <- NULL
+#Get rid of these columns because they only have NA values. 
+#Even if we ran fill NA, they would just be a column of 0s that we wouldn't know are actually 0s.
+#Moreover, we know that there are costs in MICE to adding unnecessary columns that don't give crucial information.
 
-#put name of data file here:
-data_file <- "/merged_dataset.Rdata"
-load(paste(sure_path, "/data" , data_file, sep = ""))
-```
+#Get rid of spaces
+colnames(merged_as_ints) <- gsub(" ", "_", colnames(merged_as_ints))
+
+#Get rid of parentheses
+colnames(merged_as_ints)[22:23] <- c("Country_of_Exploit_2L", "Country_of_Citizenship_2L")
+
+#Fills in the means of control variables with 0s 
+#If another means of control variable has a 1 in the same row
+merged_as_ints <- fill_in_nas_v2(merged_as_ints, 30:47)
+merged_as_ints <- fill_in_nas_v2(merged_as_ints, 53:61)
+merged_as_ints <- fill_in_nas_v2(merged_as_ints, 68:71)
 
 
-#Running fill_in_nas
-
-```{r}
-
-```
-
-
-#Blocks for imputation
-```{r}
-
-```
-
-
-#Running mice_new
-```{r}
-
+#merged_dataset has no columns with NAs and no columsn with just NAs and 1s or just NAs and 0s.
+merged_dataset <- merged_as_ints
 ```
 
