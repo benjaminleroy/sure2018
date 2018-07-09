@@ -527,7 +527,7 @@ mice_new <- function(data, data_corrected = correct_data(data),
     initial_data_storage[[as.character(i)]] <- 
       mice_multiple_imputations_one_iter2(
         data_list = initial_data_storage[[as.character(i - 1)]],
-        blocks = complete_blocks,
+        blocks = blocks,
         predictorMatrix = predictorMatrix,
         method = method,
         seed = seed,
