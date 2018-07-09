@@ -7,3 +7,25 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+There are three groups in which we can use the fill NA function.
+
+Some of these columns should be taken out as there is no information inserted to them at all. this includes meansOfControl: TakesEarning, RestrictsFinaicialfAccess, Threats, PsychologicalAbuse, Physical Abuse ect.  
+
+```{r}
+imp_dataset <- big_merge_datasets[,-c((33:37),(41:48))]
+
+
+```
+
+```{r}
+imp_dataset_names <- colnames(imp_dataset)
+fill_control <- grep("meansOfControl+",imp_dataset_names, value=TRUE)
+
+fill_control[-c(5),1]
+``` 
+
+
+
+
+
