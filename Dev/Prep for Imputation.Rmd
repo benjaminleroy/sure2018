@@ -45,8 +45,9 @@ colnames(big_merge_datasets) <- gsub(' ', '_', colnames(big_merge_datasets))
 colnames(big_merge_datasets)[22:23] <- c("Country_of_Exploit_2L", "Country_of_Citizenship_2L")
 
 
-#
-for(i in list(30:46, 49:52, 53:61, 68:71)){
+#Take out column 51, isOtheExploit, from the original 49:52 fill NA group
+#Being Sex/Labor/Sex&Labor exploit does not imply someone is not isOtherExploit
+for(i in list(30:46, c(49, 50, 52), 53:61, 68:71)){
   big_merge_datasets <- fill_in_nas(big_merge_datasets, i)
 }
 ```
