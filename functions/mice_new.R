@@ -420,7 +420,7 @@ get_methods_for_full_block <- function(predMatrix, data, blocks,
       }
       b_idx <- b_idx + 1
     }else{
-      fullmethods[block] = fullmethods[block]
+      fullmethods[block] = block_methods[block]
     }
     
   }
@@ -527,7 +527,7 @@ mice_new <- function(data, data_corrected = correct_data(data),
     initial_data_storage[[as.character(i)]] <- 
       mice_multiple_imputations_one_iter2(
         data_list = initial_data_storage[[as.character(i - 1)]],
-        blocks = complete_blocks,
+        blocks = blocks,
         predictorMatrix = predictorMatrix,
         method = method,
         seed = seed,
@@ -694,3 +694,17 @@ vis_chain <- function(chain_array, var_names = NULL, nrow = NULL){
 # var_names <- dimnames(chain_array)[[1]][sample(num_vars, 10)]
 # vis_chain(chain_array, var_names) # takes around 15 seconds
 # vis_chain(chain_array2, var_names) # takes around 15 seconds
+
+
+running2 <- mice_new(data = nhanes2,
+                     data_corrected = correct_data(nhanes2),
+                     blocks = mice::make.blocks(nhanes2),
+                     method = mice::make.method(nhanes2),
+                     predictorMatrix = mice::make.predictorMatrix(nhanes2),
+                     seed = 4909,
+                     m = 2, maxit = 4, verbose = FALSE)
+
+running2[["0"]][[1]]$data %>% is.na %>% sum
+running2[["1"]][[1]]$data %>% is.na %>% sum
+running2[["2"]][[1]]$data %>% is.na %>% sum
+running2[["3"]][[1]]$data %>% is.na %>% sum

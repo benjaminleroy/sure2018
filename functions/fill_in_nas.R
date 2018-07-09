@@ -1,4 +1,4 @@
-fill_in_nas_v2 <- function(df, col_vec){
+fill_in_nas <- function(df, col_vec){
   #filling in the NAs with zeros in the sets of variables
   #where at least one variable in each row of each group has a 1
   #Parameters: df should be the dataframe. col_vec should be a vector indentify
@@ -17,4 +17,5 @@ fill_in_nas_v2 <- function(df, col_vec){
   df
 }
 
-
+#to avoid breaking any code that use fill_in_nas_v2
+fill_in_nas_v2 <- fill_in_nas
