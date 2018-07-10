@@ -24,11 +24,11 @@ row_sum_test <- function(df, var_cols, a, equal = FALSE, number = FALSE,
   
   if (equal) {
     row_sums %>% function(x) {x == a} %>% sum %>% return
-  } elif (number) {
+  } else if (number) {
     row_sums %>% sum %>% return
-  } elif (less_than) {
+  } else if (less_than) {
     row_sums %>% function(x) {x < a} %>% sum %>% return
-  } elif (greater_than) {
+  } else if (greater_than) {
     row_sums %>% function(x) {x < a} %>% sum %>% return
   }
 }

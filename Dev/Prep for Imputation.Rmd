@@ -22,6 +22,7 @@ library(mice)
 sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
 source(paste(sure_path, "/functions/mice_new.R", sep = ""))
 source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
+source(paste(sure_path, "/functions/some_testing_functions.R", sep = ""))
 
 #put name of data file here:
 data_file <- "/merged_dataset.Rdata"
@@ -229,26 +230,23 @@ vis_chain(chain_array2, var_names) # takes around 15 seconds
 #Some tests to see if the results are reasonable 
 ```{r}
 #The number of 1's in each group of variables
-apply(test_factors$mids$data[,grep("meansOfControl+",imp_dataset_names, value=TRUE)],MARGIN = 1, function(x){sum(as.numeric(x))})
+row_sum_test(test_factors$mids$data, grep("meansOfControl+",imp_dataset_names, value=TRUE), number = TRUE)
+row_sum_test(test_factors$mids$data, grep("typeOfLabour+",imp_dataset_names, value=TRUE), number = TRUE)
+row_sum_test(test_factors$mids$data, grep("typeOfSex+",imp_dataset_names, value=TRUE), number = TRUE)
+row_sum_test(test_factors$mids$data, grep("recruiter+",imp_dataset_names, value=TRUE), number = TRUE)
 
-apply(test_factors$mids$data[,grep("recruiter+",imp_dataset_names, value=TRUE)],MARGIN = 1, function(x){sum(as.numeric(x))})
-
-apply(test_factors$mids$data[,grep("typeOfLabour+",imp_dataset_names, value=TRUE)],MARGIN = 1, function(x){sum(as.numeric(x))})
-
-apply(test_factors$mids$data[,grep("typeOfSex+",imp_dataset_names, value=TRUE)],MARGIN = 1, function(x){sum(as.numeric(x))})
 
 #How many rows have more than one indicator variable flagged for each block:
 #meansOfControl*
-sum(apply(test_factors$mids$data[test_factors$mids$data$meansOfControlNotSpecified == 1, 
-                          grep("meansOfControl+", imp_dataset_names, value=TRUE)], 
-           MARGIN = 1, function(x){sum(as.numeric(x))}) > 1)
+row_sum_test(test_factors$mids$data, grep("meansOfControl+",imp_dataset_names,
+                                value=TRUE), a = 1, greater_than = TRUE)
+row_sum_test(test_factors$mids$data, grep("typeOfLabour+",imp_dataset_names,
+                                value=TRUE), a = 1, greater_than = TRUE)
+row_sum_test(test_factors$mids$data, grep("typeOfSex+",imp_dataset_names, 
+                                value=TRUE), a = 1, greater_than = TRUE)
+row_sum_test(test_factors$mids$data, grep("recruiter+",imp_dataset_names,
+                                value=TRUE), a = 1, greater_than = TRUE)
 
-nrow(test_factors$mids$data[test_factors$mids$data$meansOfControlNotSpecified == 1,])
-
-sum(apply(test_factors$mids$data[test_factors$mids$data$meansOfControlNotSpecified == 0, 
-                          grep("meansOfControl+", imp_dataset_names, value=TRUE)], 
-           MARGIN = 1, function(x){sum(as.numeric(x))}) > 1)
-nrow(test_factors$mids$data[test_factors$mids$data$meansOfControlNotSpecified == 0,])
 
 
 #recruiterRelationship*
@@ -279,6 +277,14 @@ sum(apply(test_factors$mids$data[test_factors$mids$data$recruiterRelationUnknown
            MARGIN = 1, function(x){sum(as.numeric(x))}) > 1)
 
 #How many rows have less than one indicator variable flagged for each block:
+row_sum_test(test_factors$mids$data, grep("meansOfControl+",imp_dataset_names,
+                                value=TRUE), a = 1, less_than = TRUE)
+row_sum_test(test_factors$mids$data, grep("typeOfLabour+",imp_dataset_names,
+                                value=TRUE), a = 1, less_than = TRUE)
+row_sum_test(test_factors$mids$data, grep("typeOfSex+",imp_dataset_names, 
+                                value=TRUE), a = 1, less_than = TRUE)
+row_sum_test(test_factors$mids$data, grep("recruiter+",imp_dataset_names,
+                                value=TRUE), a = 1, less_than = TRUE)
 #
 #meansOfControl*
 sum(apply(test_factors$mids$data[test_factors$mids$data$meansOfControlNotSpecified == 1, 
