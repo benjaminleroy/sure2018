@@ -39,6 +39,10 @@ cols_to_remove <- c("isForcedMilitary","isOrganRemoval","typeOfLabourIllicitActi
                     "typeOfSexRemoteInteractiveServices")
 big_merge_datasets[, cols_to_remove] <- NULL
 
+#furthermore the variable isSexAndLabour has a 1 in 23 instances and in each of them
+#both isForcedLabour and isSexualExploit have a 1 as well
+big_merge_datasets[,"isSexAndLabour"] <- NULL
+
 #mice doesn't like column names with spaces in them
 colnames(big_merge_datasets) <- gsub(' ', '_', colnames(big_merge_datasets))
 

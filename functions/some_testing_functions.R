@@ -18,18 +18,20 @@
 #'
 #' @examples
 row_sum_test <- function(df, var_cols, a, equal = FALSE, number = FALSE, 
-                         less_than = !greater_than, greater_than = !less_than) {
+                         less_than = !greater_than, greater_than = !less_than, na.rm = FALSE) {
   
-  row_sums <- apply(df[,var_cols], MARGIN = 1, function(x){x %>% as.numeric %>% sum})
+  row_sums <- apply(df[,var_cols], MARGIN = 1, function(x){x %>% as.numeric %>% sum(na.rm = na.rm)})
   
   if (equal) {
-    row_sums %>% function(x) {x == a} %>% sum %>% return
+    row_sums %>% (function(x) {x == a}) %>% sum %>% return
   } else if (number) {
     row_sums %>% sum %>% return
   } else if (less_than) {
-    row_sums %>% function(x) {x < a} %>% sum %>% return
+    print("less_than")
+    row_sums %>% (function(x) {x < a}) %>% sum %>% return
   } else if (greater_than) {
-    row_sums %>% function(x) {x < a} %>% sum %>% return
+    print("greater_than")
+    row_sums %>% (function(x) {x > a}) %>% sum %>% return
   }
 }
 
