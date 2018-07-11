@@ -80,6 +80,9 @@ block_list<-list(citz_group, exp_group, migration_group, "ageBroad", controlgrou
                  control_not_specified, recruitergroup, recruiter_not_specified,
                  labourgroup, labourgroup_not_specified, sexgroup, "isOtherExploit")
 
+
+
+#Turning the indicator variables into factors
 big_merge_datasets_factor <- big_merge_datasets
 
 #converts year and ageBroad into ordered factors
@@ -101,7 +104,7 @@ factor_cols <- c("Datasource", "gender", "majorityStatus", "majorityEntry",
                  "meansOfControlUsesChildren", "meansOfControlThreatOfLawEnforcement", 
                  "meansOfControlWithholdsNecessities", "meansOfControlWithholdsDocuments", 
                  "meansOfControlOther", "meansOfControlNotSpecified", "isForcedLabour", 
-                 "isSexualExploit", "isOtherExploit", "isSexAndLabour","isForcedMarriage", 
+                 "isSexualExploit", "isOtherExploit","isForcedMarriage", 
                  "typeOfLabourAgriculture", "typeOfLabourAquafarming", "typeOfLabourBegging", 
                  "typeOfLabourConstruction", "typeOfLabourDomesticWork", 
                  "typeOfLabourHospitality", "typeOfLabourManufacturing","typeOfLabourPeddling", 
@@ -115,10 +118,16 @@ for (column in factor_cols) {
   big_merge_datasets_factor[,column] <- as.factor(unlist(big_merge_datasets[,column]))
 }
 
-ini <- mice(big_merge_datasets, blocks = block_list, maxit = 0)
-pred_matrix <- ini$predictorMatrix
 
-View(ini$method)
+
+#Creating an ini object to pull the predictorMatrix and method vector
+ini <- mice(big_merge_datasets_factor, blocks = block_list, maxit = 0)
+pred_matrix <- ini$predictorMatrix
+imp_method <- ini$method
+
+#pmm results in mice trying to solve a computationally singular system and 
+#switching to rf (random forest)
+imp_method[1:4] <- "rf"
 
 #Make sure relationships of interest aren't used in imputation
 pred_matrix[1:3,22:71] <- 0
@@ -128,8 +137,8 @@ for(i in 4:length(block_list)){
   pred_matrix[i, block_list[[i]]] <- 0
 }
 
-test_run <- mice_new(big_merge_datasets_factor, blocks = block_list, 
+factor_run <- mice_new(big_merge_datasets_factor, method = imp_method, blocks = block_list, 
                      predictorMatrix = pred_matrix, seed = 1729,
                      m = 5, maxit = 10)
 
-test_factors <- mice_new_cleanup(test_run)
+mice_new_factor_obj <- mice_new_cleanup(factor_run)
