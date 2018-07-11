@@ -8,7 +8,7 @@ source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
 source(paste(sure_path, "/functions/some_testing_functions.R", sep = ""))
 
 #put name of data file here:
-data_file <- "/big_merged_datasets.Rdata"
+data_file <- "/big_merge_datasets.Rdata"
 load(paste(sure_path, "/data" , data_file, sep = ""))
 
 

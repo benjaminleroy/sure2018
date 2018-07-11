@@ -26,12 +26,11 @@ data_file <- "/big_merge_datasets.Rdata"
 load(paste(sure_path, "/data" , data_file, sep = ""))
 
 ```
-
+#Source script
 ```{r}
 source(paste(sure_path, "/Dev/Prep_for_imp.R", sep = ""))
 
 ```
-
 
 #Running mice_new
 ```{r}
