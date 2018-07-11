@@ -178,9 +178,22 @@ for (column in factor_cols) {
   big_merge_datasets_factor[,column] <- as.factor(unlist(big_merge_datasets[,column]))
 }
 
-test_run <- mice_new(big_merge_datasets_factor, blocks = block_list, 
+# test_run <- mice_new(big_merge_datasets_factor, 
+#                      blocks = block_list, 
+#                      predictorMatrix = pred_matrix, seed = 1729,
+#                      m = 5, maxit = 5)
+
+#MUST RUN WITH 10 MAXIT AND data_corrected = correct_data(data_proxy, option = "empirical")
+#COMPARE THE NAS AFTER DOING THIS TO THE NAS ORIGINALLY
+for (column in factor_cols) {
+  big_merge_datasets_factor[,column] <- as.factor(unlist(big_merge_datasets[,column]))
+}
+
+test_run <- mice_new(big_merge_datasets_factor, 
+                     data_corrected = correct_data(data_proxy, option = "empirical"),
+                     blocks = block_list, 
                      predictorMatrix = pred_matrix, seed = 1729,
-                     m = 5, maxit = 5)
+                     m = 5, maxit = 10)
 
 test_factors <- mice_new_cleanup(test_run)
 
