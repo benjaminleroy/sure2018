@@ -112,15 +112,24 @@ block_list<-list(controlgroup, control_not_specified, recruitergroup, recruiter_
 
 #Constructing the predictorMatrix
 ```{r}
-ini <- mice(big_merge_datasets, blocks = block_list, maxit = 0)
+
+#Creating an ini object to pull the predictorMatrix and method vector
+ini <- mice(big_merge_datasets_factor, blocks = block_list, maxit = 0)
 pred_matrix <- ini$predictorMatrix
-#View(pred_matrix)
+imp_method <- ini$method
 
-pred_matrix[,-(22:72)] <- 0
+#Make sure relationships of interest aren't used in imputation
+pred_matrix[1:3,22:71] <- 0
+pred_matrix[-(1:3),-(22:71)] <- 0
 
-for(i in 1:length(block_list)){
+for(i in 4:length(block_list)){
   pred_matrix[i, block_list[[i]]] <- 0
 }
+
+#For reasons below, we have removed "isSexAndLabour" column from the dataset
+#furthermore the variable isSexAndLabour has a 1 in 23 instances and in each of them
+#both isForcedLabour and isSexualExploit have a 1 as well
+pred_matrix[,"isSexAndLabour"] <- NULL
 ```
 
 #Running mice_new
@@ -189,8 +198,9 @@ for (column in factor_cols) {
   big_merge_datasets_factor[,column] <- as.factor(unlist(big_merge_datasets[,column]))
 }
 
+
 test_run <- mice_new(big_merge_datasets_factor, 
-                     data_corrected = correct_data(data_proxy, option = "empirical"),
+                     data_corrected = correct_data(big_merge_datasets_factor, option = "empirical"),
                      blocks = block_list, 
                      predictorMatrix = pred_matrix, seed = 1729,
                      m = 5, maxit = 10)

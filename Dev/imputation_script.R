@@ -39,6 +39,7 @@ for(i in list(30:46, 48:51, 52:60, 62:64, c(65, 67:70))){
 }
 
 
+
 #building the blocks
 imp_dataset_names<-colnames(big_merge_datasets)
 
@@ -79,6 +80,41 @@ block_list<-list(citz_group, exp_group, migration_group, "ageBroad", controlgrou
                  control_not_specified, recruitergroup, recruiter_not_specified,
                  labourgroup, labourgroup_not_specified, sexgroup, "isOtherExploit")
 
+big_merge_datasets_factor <- big_merge_datasets
+
+#converts year and ageBroad into ordered factors
+big_merge_datasets_factor$Year <- as.ordered(big_merge_datasets$Year)
+big_merge_datasets_factor$ageBroad <- as.ordered(big_merge_datasets$ageBroad)
+big_merge_datasets_factor$ageBroad <- fct_relevel(big_merge_datasets$ageBroad, "0--8", "9--17", 
+                                                  "18--20", "21--23", "24--26", "27--29", 
+                                                  "30--38", "39--47", "48+")
+
+#converts the columns with characters into unordered factors
+factor_cols <- c("Datasource", "gender", "majorityStatus", "majorityEntry",  
+                 "RecruiterRelationship",  
+                 "meansOfControlDebtBondage", "meansOfControlTakesEarnings", 
+                 "meansOfControlRestrictsFinancialAccess", "meansOfControlThreats", 
+                 "meansOfControlPsychologicalAbuse", "meansOfControlPhysicalAbuse", 
+                 "meansOfControlSexualAbuse", "meansOfControlFalsePromises", 
+                 "meansOfControlPsychoactiveSubstances", "meansOfControlRestrictsMovement", 
+                 "meansOfControlRestrictsMedicalCare", "meansOfControlExcessiveWorkingHours", 
+                 "meansOfControlUsesChildren", "meansOfControlThreatOfLawEnforcement", 
+                 "meansOfControlWithholdsNecessities", "meansOfControlWithholdsDocuments", 
+                 "meansOfControlOther", "meansOfControlNotSpecified", "isForcedLabour", 
+                 "isSexualExploit", "isOtherExploit", "isSexAndLabour","isForcedMarriage", 
+                 "typeOfLabourAgriculture", "typeOfLabourAquafarming", "typeOfLabourBegging", 
+                 "typeOfLabourConstruction", "typeOfLabourDomesticWork", 
+                 "typeOfLabourHospitality", "typeOfLabourManufacturing","typeOfLabourPeddling", 
+                 "typeOfLabourOther", "typeOfLabourNotSpecified", "typeOfSexProstitution", 
+                 "typeOfSexPornography","typeOfSexPrivateSexualServices", 
+                 "recruiterRelationIntimatePartner", "recruiterRelationFriend", 
+                 "recruiterRelationFamily", "recruiterRelationOther", 
+                 "recruiterRelationUnknown", "isAbduction")
+
+for (column in factor_cols) {
+  big_merge_datasets_factor[,column] <- as.factor(unlist(big_merge_datasets[,column]))
+}
+
 ini <- mice(big_merge_datasets, blocks = block_list, maxit = 0)
 pred_matrix <- ini$predictorMatrix
 
@@ -92,8 +128,6 @@ for(i in 4:length(block_list)){
   pred_matrix[i, block_list[[i]]] <- 0
 }
 
-View(block_list)
-View(pred_matrix)
 test_run <- mice_new(big_merge_datasets_factor, blocks = block_list, 
                      predictorMatrix = pred_matrix, seed = 1729,
                      m = 5, maxit = 10)
