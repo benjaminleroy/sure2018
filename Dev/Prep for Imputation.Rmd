@@ -35,10 +35,10 @@ load(paste(sure_path, "/data" , data_file, sep = ""))
 cols_to_remove <- c("isForcedMilitary","isOrganRemoval","typeOfLabourIllicitActivities",
                     "typeOfLabourMiningOrDrilling","typeOfLabourTransportation",
                     "typeOfSexRemoteInteractiveServices")
-for(i in cols_to_remove){
-  cat(i, "has", row_sum_test(big_merge_datasets, i, 1, equal = TRUE, na.rm = TRUE), 
-      "rows with a 1 in them \n")
-}
+# for(i in cols_to_remove){
+#   cat(i, "has", row_sum_test(big_merge_datasets, i, 1, equal = TRUE, na.rm = TRUE), 
+#       "rows with a 1 in them \n")
+# }
 
 #all the columns in cols_to_remove don't have a single one, i.e. these indicators
 #are never true, so we removed them
@@ -58,14 +58,21 @@ colnames(big_merge_datasets)[22:23] <- c("Country_of_Exploit_2L", "Country_of_Ci
 #Running fill_in_nas
 
 ```{r}
-for(i in list(30:46, 48:51, 52:60, 62:64, c(65, 67:70))){
-  cat(i[1], "has", row_sum_test(big_merge_datasets, i, 1, equal = TRUE, na.rm = TRUE), 
-      "rows with a 1 in them \n")
-  cat(i[1], "has", row_sum_test(big_merge_datasets, i, 1, greater_than = TRUE, na.rm = TRUE), 
-      "rows with more than a single 1 in them \n")
-}
 
 
+# coln`
+# for(i in list(30:46, 48:51, 52:60, 62:64, c(65, 67:70))){
+#   cat(i[1], "has", row_sum_test(big_merge_datasets, i, 1, equal = TRUE, na.rm = TRUE), 
+#       "rows with a 1 in them \n")
+#   cat(i[1], "has", row_sum_test(big_merge_datasets, i, 1, greater_than = TRUE, na.rm = TRUE), 
+#       "rows with more than a single 1 in them \n")
+# }
+
+#30:46 means
+#48:51 is
+#52:61 typeOfLabour
+#62:64 typeOfSex
+#c(65, 66:70) isAbduction/recruiter
 for(i in list(30:46, 48:51, 52:60, 62:64, c(65, 67:70))){
   big_merge_datasets <- fill_in_nas(big_merge_datasets, i)
 }
