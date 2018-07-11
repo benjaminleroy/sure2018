@@ -194,7 +194,7 @@ for (column in factor_cols) {
 }
 
 test_run <- mice_new(big_merge_datasets_factor, 
-                     data_corrected = correct_data(data_proxy, option = "empirical"),
+                     data_corrected = correct_data(big_merge_datasets_factor, option = "empirical"),
                      blocks = block_list, 
                      predictorMatrix = pred_matrix, seed = 1729,
                      m = 5, maxit = 10)
