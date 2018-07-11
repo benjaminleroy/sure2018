@@ -106,8 +106,7 @@ sexgroup<-append(sexgroup, c("isSexualExploit","isForcedMarriage"))
 
 
 block_list<-list(controlgroup, control_not_specified, recruitergroup, recruiter_not_specified,
-                 labourgroup, labourgroup_not_specified, sexgroup, "isOtherExploit",
-                 "isSexAndLabour")
+                 labourgroup, labourgroup_not_specified, sexgroup, "isOtherExploit")
 ```
 
 
@@ -165,7 +164,7 @@ factor_cols <- c("Datasource", "gender", "majorityStatus", "majorityEntry",
                  "meansOfControlUsesChildren", "meansOfControlThreatOfLawEnforcement", 
                  "meansOfControlWithholdsNecessities", "meansOfControlWithholdsDocuments", 
                  "meansOfControlOther", "meansOfControlNotSpecified", "isForcedLabour", 
-                 "isSexualExploit", "isOtherExploit", "isSexAndLabour","isForcedMarriage", 
+                 "isSexualExploit", "isOtherExploit","isForcedMarriage", 
                  "typeOfLabourAgriculture", "typeOfLabourAquafarming", "typeOfLabourBegging", 
                  "typeOfLabourConstruction", "typeOfLabourDomesticWork", 
                  "typeOfLabourHospitality", "typeOfLabourManufacturing","typeOfLabourPeddling", 
@@ -218,7 +217,7 @@ logical_cols <- c("meansOfControlDebtBondage", "meansOfControlTakesEarnings",
                  "meansOfControlUsesChildren", "meansOfControlThreatOfLawEnforcement", 
                  "meansOfControlWithholdsNecessities", "meansOfControlWithholdsDocuments", 
                  "meansOfControlOther", "meansOfControlNotSpecified", "isForcedLabour", 
-                 "isSexualExploit", "isOtherExploit", "isSexAndLabour","isForcedMarriage", 
+                 "isSexualExploit", "isOtherExploit","isForcedMarriage", 
                  "typeOfLabourAgriculture", "typeOfLabourAquafarming", "typeOfLabourBegging", 
                  "typeOfLabourConstruction", "typeOfLabourDomesticWork", 
                  "typeOfLabourHospitality", "typeOfLabourManufacturing","typeOfLabourPeddling", 
