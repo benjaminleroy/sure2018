@@ -1,0 +1,60 @@
+---
+title: "Block Defense"
+author: "Imani C."
+date: "July 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Fill_NA's
+
+Within our data, there are chunks of like columns that express similar attributes to the such as means of control or type of exploitation. Within these like columns there is a pattern where if one column has  a 1 the other like columns have NAs. To account for this we use the fill_na function that essentially replaces the NAs of the like columns with 0 if the sum of a row of the like columns is equal to 1.
+
+The chunks are as follows:
+
+meansofControl
+typeofLabour
+typeofSex
+is Abduction/RecruiterRelation
+
+
+Blocks
+
+Before implementing the mice_new function, it is important to determine to split
+the intended imputed variables in blocks. Blocks are used to group variables whose missingness may be related. This helps us avoid the problem of imputing data that makes the columns too dependent on one another.
+
+The blocks for fill_na and imputation are similar but we remove the "NotSpecified"/"NotUnknown" columns from each block as they essentially say the related column should be NA and therefor could effect our imputation.  
+
+
+
+For the variables we use as proxies for countries, we group by all migration features, country of citizennship features and country of exploitation features. 
+
+
+
+Removing Variables
+
+Multiple variables have been removed either based on their lack of useful information or their redundancy. 
+
+Variables such as, "isForcedMilitary", "isOrganRemoval", "typeOfLabourIllicitActivities", "typeOfLabourMiningOrDrilling", "typeOfLabourTransportation", and "typeOfSexRemoteInteractiveServices" only has NA's and as such, were dropped.
+
+The variable isSexandLabour was also removed for its redundancy as it only had a 1 when both the isForcedLabour and the isexualExploit  also had 1s.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
