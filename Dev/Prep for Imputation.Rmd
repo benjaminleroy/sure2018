@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(reshape2)
 library(tidyverse)
 library(mice)
+library(randomForest)
 
 sure_path <- substr(getwd(), 1, nchar(getwd()) - 4)
 source(paste(sure_path, "/functions/mice_new.R", sep = ""))
@@ -34,7 +35,18 @@ source(paste(sure_path, "/Dev/Prep_for_imp.R", sep = ""))
 
 #Running mice_new
 ```{r}
-test_run <- mice_new(trimmed_dataset, data_corrected = correct_data_Marginalsample(trimmed_dataset),
+
+#Maybe run this if the below code is giving error "$ operator is invalid for atomic vectors"
+# test_run <- mice_new(trimmed_dataset, data_corrected = correct_data_Marginalsample(trimmed_dataset),
+#                      blocks = block_list, 
+#                      method = imp_method,
+#                      predictorMatrix = pred_matrix, 
+#                      seed = 1729,
+#                      m = 5, 
+#                      maxit = 10) 
+
+test_run <- mice_new(data = trimmed_dataset, 
+                     data_corrected = correct_data(trimmed_dataset, option = "empirical"),
                      blocks = block_list, 
                      method = imp_method,
                      predictorMatrix = pred_matrix, 
