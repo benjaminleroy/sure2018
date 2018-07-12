@@ -8,7 +8,7 @@ source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
 source(paste(sure_path, "/functions/some_testing_functions.R", sep = ""))
 
 #put name of data file here:
-data_file <- "/big_merged_datasets.Rdata"
+data_file <- "/big_merge_datasets.Rdata"
 load(paste(sure_path, "/data" , data_file, sep = ""))
 
 
@@ -55,11 +55,15 @@ for(i in list(17:33, 35:38, 39:47, 49:51, c(52, 54:57))){
   big_merge_datasets <- fill_in_nas(big_merge_datasets, i)
 }
 
+#replacing "Unknown" in ageBroad with NA
+big_merge_datasets$ageBroad[big_merge_datasets$ageBroad == "Unknown"] <- NA
 
-#converts year and ageBroad into ordered factors
+#converts tier and ageBroad into ordered factors
 for(i in c("Citz_Tier", "Exp_Tier", "ageBroad")){
   big_merge_datasets[,i] <- as.ordered(big_merge_datasets[,i])
 }
+
+big_merge_datasets$ageBroad <- droplevels(big_merge_datasets$ageBroad)
 big_merge_datasets$ageBroad <- fct_relevel(big_merge_datasets$ageBroad, "0--8", "9--17", 
                                                   "18--20", "21--23", "24--26", "27--29", 
                                                   "30--38", "39--47", "48+")
@@ -91,35 +95,43 @@ for (column in factor_cols) {
 
 trimmed_dataset <- big_merge_datasets
 
-save(trimmed_dataset, file = paste(sure_path, "/data/trimmed_dataset.Rdata", sep = ""))
+# save(trimmed_dataset, file = paste(sure_path, "/data/trimmed_dataset.Rdata", sep = ""))
 
 #building the blocks
 imp_dataset_names<-colnames(trimmed_dataset)
 
 controlgroup <-  grep("meansOfControl+",imp_dataset_names, value=TRUE)
 #take out not specified
+control_not_specified  <- controlgroup[length(controlgroup)]
 controlgroup <- controlgroup[-length(controlgroup)]
 
 recruitergroup <- grep("recruiter+", imp_dataset_names, ignore.case = FALSE, value=TRUE)
 #removing not specified
+recruiter_not_specified <- recruitergroup[length(recruitergroup)]
 recruitergroup <- recruitergroup[-length(recruitergroup)]
 recruitergroup <- append(recruitergroup, "isAbduction")
 
 
 labourgroup <- grep("typeOfLabour+",imp_dataset_names, value=TRUE)
 #removing not specified 
+labourgroup_not_specified <- labourgroup[length((labourgroup))]
 labourgroup <- labourgroup[-length(labourgroup)]
 
 
 sexgroup<-grep("typeOfSex+", imp_dataset_names, ignore.case = FALSE, value=TRUE)
 
 
-#country of citizenship proxy variables and removing the last one tier:
+#country of citizenship proxy variables. Since tier is ordinal unlike the other 
+#numeric proxy variables we put in its own block so we can use the polr method
 citz_group <- grep("Citz_+", imp_dataset_names, ignore.case = FALSE, value=TRUE)
+citz_tier <- citz_group[length(citz_group)]
 citz_group <- citz_group[-length(citz_group)]
 
-#country of exploit proxy variables and removing the last one tier:
+
+#country of citizenship proxy variables. Since tier is ordinal unlike the other 
+#numeric proxy variables we put in its own block so we can use the polr method
 exp_group <- grep("Exp_+", imp_dataset_names, ignore.case = FALSE, value=TRUE)
+exp_tier <- exp_group[length(exp_group)]
 exp_group <- exp_group[-length(exp_group)]
 
 #migration block
@@ -129,15 +141,14 @@ migration_group <- grep("Migration_+", imp_dataset_names, ignore.case = FALSE, v
 population_group <- grep("Population_+", imp_dataset_names, ignore.case = FALSE, value=TRUE)
 
 
-block_list<-list(citz_group, exp_group, "ageBroad", controlgroup, recruitergroup,
-                 labourgroup, sexgroup)
+block_list<-list(citz_group, citz_tier, exp_group, exp_tier, "ageBroad", 
+                 controlgroup, recruitergroup, labourgroup, sexgroup)
 
-save(block_list, file =  paste(sure_path, "/data/block_list.Rdata", sep = ""))
+# save(block_list, file =  paste(sure_path, "/data/block_list.Rdata", sep = ""))
 #Creating an ini object to pull the predictorMatrix and method vector
 ini <- mice(trimmed_dataset, blocks = block_list, maxit = 0)
 pred_matrix <- ini$predictorMatrix
 imp_method <- ini$method
-
 
 
 #if pmm or polr cause problems consider switching to rf (random forest)
@@ -152,5 +163,14 @@ pred_matrix[,c(population_group, migration_group)] <- 0
 for(i in 4:length(block_list)){
   pred_matrix[i, block_list[[i]]] <- 0
 }
-save(pred_matrix, file =  paste(sure_path, "/data/pred_matrix.Rdata", sep = ""))
-save(imp_method, file =  paste(sure_path, "/data/imp_method.Rdata", sep = ""))
+
+not_specified_list <- list(control_not_specified, recruiter_not_specified, 
+                           labourgroup_not_specified)
+for(i in 6:8){
+  pred_matrix[-i, not_specified_list[[i-5]]] <- 0
+}
+
+pred_matrix[, "RecruiterRelationship"] <- 0
+
+# save(pred_matrix, file =  paste(sure_path, "/data/pred_matrix.Rdata", sep = ""))
+# save(imp_method, file =  paste(sure_path, "/data/imp_method.Rdata", sep = ""))
