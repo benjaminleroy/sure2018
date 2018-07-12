@@ -27,15 +27,22 @@ recruiterRelationUknown = c(1,1,0,0,0)
 
 df <- data.frame(isLabour,ageBroad,gender,recruiterRelationOther,recruiterRelationUknown)
 
-mice_sep = funcion(mno){
-  mno$datalist[1]
+
+imp_list=list()
+
+mice_sep = function(mice_object){
+  for(i in 1:5){
+    name<-paste("iteration:", i, sep='')
+  imp_data <- mice_object[["data_list"]][[i]]
   
+  imp_list[[name]]<imp_data
   
-  
-  
+  } 
 }
 
+formula() 
 
+glm_imp = function()
 
 
 
