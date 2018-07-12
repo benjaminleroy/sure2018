@@ -2,7 +2,7 @@ library(reshape2)
 library(tidyverse)
 library(mice)
 
-sure_path <- "/Users/shiva/code/CMU/sure2018"
+
 source(paste(sure_path, "/functions/mice_new.R", sep = ""))
 source(paste(sure_path, "/functions/fill_in_nas.R", sep = ""))
 source(paste(sure_path, "/functions/some_testing_functions.R", sep = ""))
