@@ -27,14 +27,28 @@ recruiterRelationUknown = c(1,1,0,0,0)
 
 df <- data.frame(isLabour,ageBroad,gender,recruiterRelationOther,recruiterRelationUknown)
 
-mice_sep = funcion(mno){
-  mno$datalist[1]
+#' Extracting final Multiple imputation
+#'
+#' @param mno the compress object returned from mice_new
+#' @param iter integer, the number of interations given to mice_new
+#' @param m integer, the number of imputations
+#'
+#' @return a list of 2 lists. One containing the m imputated data frames and one
+#' containing the m data_corrected data frames. 
+#' @export
+#'
+#' @examples
+mice_sep <- function(mno, iter, m) {
   
+  data_list <- list()
+  data_corrected_list <- list()
+  for (i in 1:5){
+    data_list[[i]] <- mno[['data_list']][[iter]][[i]][['data']]
+    data_corrected_list[[i]] <-mno[['data_list']][[iter]][[i]][['data_corrected']]
+  }
   
-  
-  
+  list("data" = data_list, "data_corrected" = data_corrected_list)
 }
-
 
 
 
