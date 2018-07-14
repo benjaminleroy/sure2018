@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #Loading everything:
 ```{r}
+
 library(reshape2)
 library(tidyverse)
 library(mice)
@@ -36,7 +37,7 @@ source(paste(sure_path, "/Dev/Prep_for_imp.R", sep = ""))
 #Running mice_new
 ```{r}
 
-#Maybe run this if the below code is giving error "$ operator is invalid for atomic vectors"
+
 # test_run <- mice_new(trimmed_dataset, data_corrected = correct_data_Marginalsample(trimmed_dataset),
 #                      blocks = block_list, 
 #                      method = imp_method,
@@ -45,8 +46,33 @@ source(paste(sure_path, "/Dev/Prep_for_imp.R", sep = ""))
 #                      m = 5, 
 #                      maxit = 10) 
 
-test_run <- mice_new(data = trimmed_dataset, 
-                     data_corrected = correct_data(trimmed_dataset, option = "empirical"),
+# test_run <- mice_new(data = trimmed_dataset, 
+#                      data_corrected = correct_data(trimmed_dataset, option = "empirical"),
+#                      blocks = block_list, 
+#                      method = imp_method,
+#                      predictorMatrix = pred_matrix, 
+#                      seed = 1729,
+#                      m = 5, 
+#                      maxit = 10) 
+
+
+#test <- mice_new_cleanup(test_run)
+
+
+# chain_array <- test$mids$chainMean
+# chain_array2 <- test$mids$chainVar
+# num_vars <- dim(chain_array)[[1]]
+# var_names <- dimnames(chain_array)[[1]][sample(num_vars, 10)]
+# vis_chain(chain_array, var_names) # takes around 15 seconds
+# vis_chain(chain_array2, var_names) # takes around 15 seconds
+
+
+
+
+
+
+test_run <- mice(data = correct_data(trimmed_dataset, option = "empirical"), 
+                     where = is.na(trimmed_dataset),
                      blocks = block_list, 
                      method = imp_method,
                      predictorMatrix = pred_matrix, 
@@ -54,14 +80,16 @@ test_run <- mice_new(data = trimmed_dataset,
                      m = 5, 
                      maxit = 10) 
 
-test <- mice_new_cleanup(test_run)
+imputation_test <- test_run
+#save(imputation_test, file =  paste(sure_path, "/data/imputation_test.Rdata", sep = ""))
 
-chain_array <- test$mids$chainMean
-chain_array2 <- test$mids$chainVar
+chain_array <- imputation_test$chainMean
+chain_array2 <- imputation_test$chainVar
 num_vars <- dim(chain_array)[[1]]
 var_names <- dimnames(chain_array)[[1]][sample(num_vars, 10)]
 vis_chain(chain_array, var_names) # takes around 15 seconds
 vis_chain(chain_array2, var_names) # takes around 15 seconds
+
 ```
 
 

@@ -27,6 +27,7 @@ recruiterRelationUknown = c(1,1,0,0,0)
 
 df <- data.frame(isLabour,ageBroad,gender,recruiterRelationOther,recruiterRelationUknown)
 
+
 #' Extracting final Multiple imputation
 #'
 #' @param mno the compress object returned from mice_new
@@ -49,6 +50,7 @@ mice_sep <- function(mno, iter, m) {
   
   list("data" = data_list, "data_corrected" = data_corrected_list)
 }
+
 
 
 #' Mice new object regression function
@@ -77,6 +79,8 @@ mno_regression <- function(mno, opt, formula, method, ...){
   
   result_list
 }
+
+glm_imp = function()
 
 
 #' Title
