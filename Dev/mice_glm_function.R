@@ -80,7 +80,6 @@ mno_regression <- function(mno, opt, formula, method, ...){
   result_list
 }
 
-glm_imp = function()
 
 
 #' Title
