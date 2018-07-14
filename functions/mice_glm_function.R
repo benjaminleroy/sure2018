@@ -15,18 +15,18 @@
 #' @examples
 mice_sep <- function(mno, iter, m, stratify = FALSE, strat_vars = NULL, 
                      seed = 1, size = 0.6) {
-  
+  require(splitstackshape)
   data_list <- list()
   data_corrected_list <- list()
   if (stratify){
     set.seed(seed = seed)
     for (i in 1:m){
-      strata <- stratified(mno[['data_list']][[iter]][[i]][['data']], 
+      strata <- splitstackshape::stratified(mno[['data_list']][[iter]][[i]][['data']], 
                            strat_vars, size = size, bothSets = TRUE)
       data_list[["training"]][[i]] <- strata$SAMP1
       data_list[["test"]][[i]] <- strata$SAMP2
       
-      strata_corrected <- stratified(mno[['data_list']][[iter]][[i]][['data_corrected']], 
+      strata_corrected <- splitstackshape::stratified(mno[['data_list']][[iter]][[i]][['data_corrected']], 
                            strat_vars, size = size, bothSets = TRUE)
       data_corrected_list[["training"]][[i]] <- strata_corrected$SAMP1
       data_corrected_list[["test"]][[i]] <- strata_corrected$SAMP2
@@ -69,8 +69,8 @@ mice_sep <- function(mno, iter, m, stratify = FALSE, strat_vars = NULL,
 mno_regression <- function(mno, opt, formula, method, m, iter, stratified = FALSE,
                            strat_vars = NULL, seed = 1, size = 0.6, ...){
   if(stratified){
-    data_list <- mice_sep(mno, stratify = TRUE, strat_vars = strat_vars,
-                          seed = seed, size = size)[opt]
+    data_list <- mice_sep(mno, iter = iter, m = m, stratify = TRUE, 
+                          strat_vars = strat_vars, seed = seed, size = size)[opt]
     df_list <- data_list[["training"]]
   }else {df_list <- mice_sep(mno, iter = iter, m = m)[opt]}
   result_list <- list()
