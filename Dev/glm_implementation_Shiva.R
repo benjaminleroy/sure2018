@@ -1,0 +1,40 @@
+sure_path <- getwd()
+load(paste(sure_path, "/data/mice_new_obj_marginal.Rdata", sep = ""))
+library(tidyverse)
+source(paste(sure_path, "/functions/mice_glm_function.R", sep = ""))
+source(paste(sure_path, "/functions/beta_functions.R", sep = ""))
+
+
+### Building the regression formula
+load(paste(sure_path, "/data/mice_new_obj.Rdata", sep = ""))
+column_names <- colnames(mice_new_obj[['data_list']][[10]][[1]][['data']])
+rm("mice_new_obj")
+citz_features <- grep("Citz_+", column_names, value = TRUE) %>% paste(collapse = " + ")
+exp_features <- grep("Exp_+", column_names, value = TRUE)[] %>% paste(collapse = " + ")
+meansOfControl <- grep("meansOfControl+", column_names, value = TRUE)[-18] %>% paste(collapse = " + ")
+migration <- grep("Migration_+", column_names, value = TRUE) %>% paste(collapse = " + ")
+populationgroup <- grep("Population_+", column_names, value = TRUE) %>% paste(collapse = " + ")
+RecruiterRelationship <- c(grep("recruiterRelation+", column_names, value = TRUE)[-5], 
+                           "isAbduction") %>% paste(collapse = " + ")
+
+imp_formula <- paste("isForcedLabour ~ gender + ageBroad", citz_features, exp_features,
+                     meansOfControl, migration, populationgroup, RecruiterRelationship,
+                    sep = " + ") %>% as.formula()
+
+imp_formula_interaction <- paste("isForcedLabour ~ gender*ageBroad", citz_features, exp_features,
+                     meansOfControl, migration, populationgroup, RecruiterRelationship,
+                     sep = " + ") %>% as.formula()
+
+working_mno <- mice_new_obj_marginal
+
+working_mno <- bind_country_cols(working_mno, 10, 5, sure_path = sure_path)
+
+
+#Fitting glm model
+glm_list <- mno_regression(working_mno, 2, imp_formula_interaction, glm, stratified = TRUE,
+                           m = 5, iter = 10,
+                           strat_vars = c("gender", "ageBroad", 
+                                          "Country_of_Exploit_2L", 
+                                          "Country_of_Citizenship_2L"), family = binomial)
+
+

@@ -70,13 +70,14 @@ mno_regression <- function(mno, opt, formula, method, m, iter, stratified = FALS
                            strat_vars = NULL, seed = 1, size = 0.6, ...){
   if(stratified){
     data_list <- mice_sep(mno, iter = iter, m = m, stratify = TRUE, 
-                          strat_vars = strat_vars, seed = seed, size = size)[opt]
+                          strat_vars = strat_vars, seed = seed, size = size)[[opt]]
     df_list <- data_list[["training"]]
-  }else {df_list <- mice_sep(mno, iter = iter, m = m)[opt]}
-  result_list <- list()
+  }else{df_list <- mice_sep(mno, iter = iter, m = m)[opt]}
   
+  
+  result_list <- list()
   i <- 0
-  for (imp_df in df_list){
+  for(imp_df in df_list){
     i <- i + 1
     result_list[[i]] <- method(formula = formula, data = imp_df, ...)
   }
