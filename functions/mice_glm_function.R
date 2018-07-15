@@ -47,34 +47,16 @@ mice_sep <- function(mno, iter, m, stratify = FALSE, strat_vars = NULL,
 #' 
 #' A function to call the same regression function on each imputed dataset.
 #'
-#' @param mno the compress object returned from mice_new 
-#' @param opt 1 for the uncorrected data and 2 for the corrected data
+#' @param df_list a list of dataframes 
 #' @param formula a forumla object which will be feed to the choosen method
 #' @param method a function either lm, glm, gam or rpart
-#' @param stratified a logical if TRUE the function will attempt to fit the supplied 
-#' regression model on the training set only
 #' @param ... additional arguments to feed into method 
-#' 
-#' Variables feed to mice_sep:
-#' @param iter integer, the number of interations given to mice_new
-#' @param m integer, the number of imputations
-#' @param strat_vars a vector of variables to stratify on 
-#' @param seed integer, a seed to be feed to set.seed
-#' @param size a number between 0 and 1, controls the size of the test set
 #'
 #' @return list of objects returned by the supplied regression function 
 #' @export
 #'
 #' @examples
-mno_regression <- function(mno, opt, formula, method, m, iter, stratified = FALSE,
-                           strat_vars = NULL, seed = 1, size = 0.6, ...){
-  if(stratified){
-    data_list <- mice_sep(mno, iter = iter, m = m, stratify = TRUE, 
-                          strat_vars = strat_vars, seed = seed, size = size)[[opt]]
-    df_list <- data_list[["training"]]
-  }else{df_list <- mice_sep(mno, iter = iter, m = m)[opt]}
-  
-  
+mno_regression <- function(df_list, formula, method, ...){
   result_list <- list()
   i <- 0
   for(imp_df in df_list){
@@ -108,6 +90,7 @@ glm_list_wrapper <- function(obj_list, method, ...){
   
   result_list
 }
+
 
 #' Bind Country Columns
 #' 

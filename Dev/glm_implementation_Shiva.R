@@ -31,10 +31,30 @@ working_mno <- bind_country_cols(working_mno, 10, 5, sure_path = sure_path)
 
 
 #Fitting glm model
-glm_list <- mno_regression(working_mno, 2, imp_formula_interaction, glm, stratified = TRUE,
-                           m = 5, iter = 10,
-                           strat_vars = c("gender", "ageBroad", 
-                                          "Country_of_Exploit_2L", 
-                                          "Country_of_Citizenship_2L"), family = binomial)
+data_list <- mice_sep(working_mno, 10, 5, stratify = TRUE, 
+                      strat_vars = c("gender", "ageBroad", "Country_of_Exploit_2L",
+                                     "Country_of_Citizenship_2L"))
+
+glm_list <- mno_regression(data_list[["data_corrected"]][["training"]], 
+                           imp_formula_interaction, glm, family = binomial)
 
 
+###Building a composite variable LabourOrSex from isForcedLabour and isSexualExploit
+for(i in 1:5){
+  holder_df <- data_list[["data_corrected"]][["training"]][[i]]
+  
+  holder_df$LabourOrSex <- NA
+  
+  holder_df[holder_df$isForcedLabour == 1 & !is.na(holder_df$isForcedLabour),"LabourOrSex"] <- 1
+  holder_df[holder_df$isSexualExploit == 1 & !is.na(holder_df$isSexualExploit),"LabourOrSex"] <- 0
+  
+  data_list[["data_corrected"]][["training"]][[i]] <- holder_df
+}
+
+#Refitting the glm model with a new formula:
+imp_formula_interaction2 <- paste("LabourOrSex ~ gender*ageBroad", citz_features, exp_features,
+                                 meansOfControl, migration, populationgroup, RecruiterRelationship,
+                                 sep = " + ") %>% as.formula()
+
+glm_list2 <- mno_regression(data_list[["data_corrected"]][["training"]], 
+                            imp_formula_interaction2, glm, family = binomial)
