@@ -85,7 +85,7 @@ glm_list_wrapper <- function(obj_list, method, ...){
   i <- 0
   for(obj in obj_list){
     i <- i + 1
-    result_list[[i]] <- method(obj_list, ...)
+    result_list[[i]] <- method(obj, ...)
   }
   
   result_list
