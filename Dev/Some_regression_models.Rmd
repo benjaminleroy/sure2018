@@ -135,14 +135,14 @@ vis_beta_mat(labour_betas[,1:5])
 #and getting approximating the variance in the parameters due to imputation
 labour_betas_variance <- apply(labour_betas, MARGIN = 2, var)
 
-#build ROC Curves for each model
+#build ROC Curves for each labour model
 labour_roc_df_list <- list()
 for(i in 1:length(glm_labour_list)){
   labour_roc_df_list[[as.character(i)]][["prob"]] <- predict(glm_labour_list[[1]], 
                                                     type = "response",
                                                     newdata = data_list[["data_corrected"]][["test"]][[i]])
   
-  labour_roc_df_list[[as.character(i)]][["labels"]] <- data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]]
+labour_roc_df_list[[as.character(i)]][["labels"]] <- data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]]
   
   labour_roc_df_list[[as.character(i)]][["prob"]] <-
     labour_roc_df_list[[as.character(i)]][["prob"]][!is.na(labour_roc_df_list[[as.character(i)]][["labels"]])]
@@ -153,6 +153,32 @@ for(i in 1:length(glm_labour_list)){
 labour_roc_df <- create_roc_df(labour_roc_df_list)
 
 vis_roc_df(labour_roc_df)
+
+
+#build ROC Curve for labour interaction model
+labour_interaction_roc_df_list <- list()
+for(i in 1:length(glm_labour_interaction_list)){
+  labour_interaction_roc_df_list[[as.character(i)]][["prob"]] <- predict(glm_labour_interaction_list[[1]], 
+                                                    type = "response",
+                                                    newdata = data_list[["data_corrected"]][["test"]][[i]])
+  
+labour_interaction_roc_df_list[[as.character(i)]][["labels"]] <- data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]]
+  
+  labour_interaction_roc_df_list[[as.character(i)]][["prob"]] <-
+    labour_interaction_roc_df_list[[as.character(i)]][["prob"]][!is.na(labour_interaction_roc_df_list[[as.character(i)]][["labels"]])]
+  
+  labour_interaction_roc_df_list[[as.character(i)]][["labels"]] <-
+    labour_interaction_roc_df_list[[as.character(i)]][["labels"]][!is.na(labour_interaction_roc_df_list[[as.character(i)]][["labels"]])]
+}
+labour_interaction_roc_df <- create_roc_df(labour_interaction_roc_df_list)
+
+vis_roc_df(labour_roc_df)
+vis_roc_df(labour_interaction_roc_df)
+
+hoslem.test(data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]],
+              predict(glm_labour__list[[1]], type = "response", 
+                      newdata = data_list[["data_corrected"]][["test"]][[1]])) %>%
+    print
 
 for(i in 1:length(glm_labour_list)){
   cat("Holsem GOF test for the", i, "th imputation")
@@ -179,12 +205,14 @@ for(i in 1:length(glm_labour_interaction_list)){
                         predict(glm_labour_interaction_list[[i]], type = "response", 
                                 newdata = data_list[["data_corrected"]][["test"]][[i]]))
 }
-
+for(i in 1:length(glm_labour_interaction_list)){
+  pROC::auc(roc_labour_interaction_list[[i]]) %>% print
+}
 for(i in 1:length(glm_labour_interaction_list)){
   cat("Holsem GOF test for the", i, "th imputation")
-  hoslem.test(data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]],
+  hoslem.test(data_list[["data_corrected"]][["training"]][[i]][["isForcedLabour"]],
               predict(glm_labour_interaction_list[[i]], type = "response", 
-                      newdata = data_list[["data_corrected"]][["test"]][[i]])) %>%
+                      newdata = data_list[["data_corrected"]][["training"]][[i]])) %>%
     print
 }
 ```
@@ -244,34 +272,33 @@ for(i in 1:length(glm_sex_interaction_list)){
 }
 ```
 
-Hypothesis Testing
+##Hypothesis Testing
 ```{r}
-slim_formula_exp <- paste("isForcedLabour ~ gender + ageBroad", citz_features, exp_features,
-                     meansOfControl, migration, populationgroup, RecruiterRelationship,
-                    sep = " + ") %>% gsub(pattern = "(\\ \\+\\ Exp_Tier)", replacement = "") %>%
-    as.formula()
-
-for(i in 1:5){
-  slim_glm <- glm(slim_formula, family = "binomial", 
-                  data = data_list[["data_corrected"]][["training"]][[i]])
-  anova(glm_labour_interaction_list_list[[i]], slim_glm) %>% summary() %>% print()
-}
-anova()
-
-for(i in 1:5){
-  slim_formula_exp <- paste("isForcedLabour ~ gender*ageBroad", citz_features, exp_features,
+slim_formula_exp <- paste("isForcedLabour ~ gender*ageBroad", citz_features, exp_features,
                        meansOfControl, migration, populationgroup, RecruiterRelationship,
                       sep = " + ") %>% gsub(pattern = "(\\ \\+\\ Exp_Tier)", replacement = "") %>%
       as.formula()
-  
-  slim_glm_exp <- glm(slim_formula_exp, family = "binomial", 
-                    data = data_list[["data_corrected"]][["training"]][[i]])
-  anova(slim_glm_exp, glm_labour_interaction_list[[i]], test = "LRT") %>% print()
-  
-  slim_formula_citz <- paste("isForcedLabour ~ gender*ageBroad", citz_features, exp_features,
+
+slim_formula_citz <- paste("isForcedLabour ~ gender*ageBroad", citz_features, exp_features,
                        meansOfControl, migration, populationgroup, RecruiterRelationship,
                       sep = " + ") %>% gsub(pattern = "(\\ \\+\\ Citz_Tier)", replacement = "") %>%
       as.formula()
+
+slim_glm_exp <- glm(slim_formula_exp, family = "binomial", 
+                    data = data_list[["data_corrected"]][["training"]][[1]])
+anova(slim_glm_exp, glm_labour_interaction_list[[1]], test = "LRT")
+
+
+slim_glm_citz <- glm(slim_formula_citz, family = "binomial", 
+                    data = data_list[["data_corrected"]][["training"]][[1]])
+
+anova(slim_glm_citz, glm_labour_interaction_list[[i]], test = "LRT")
+
+#Sequential Hypothesis testing for each model:
+for(i in 1:5){
+  slim_glm_exp <- glm(slim_formula_exp, family = "binomial", 
+                    data = data_list[["data_corrected"]][["training"]][[i]])
+  anova(slim_glm_exp, glm_labour_interaction_list[[i]], test = "LRT") %>% print()
   
   slim_glm_citz <- glm(slim_formula_citz, family = "binomial", 
                     data = data_list[["data_corrected"]][["training"]][[i]])
