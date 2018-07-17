@@ -56,12 +56,15 @@ mice_sep <- function(mno, iter, m, stratify = FALSE, strat_vars = NULL,
 #' @export
 #'
 #' @examples
-mno_regression <- function(df_list, formula, method, ...){
+mno_regression <- function(df_list, formula, method, na.rm = FALSE, 
+                           cols = seq_along(df_list[[1]]), ...){
   result_list <- list()
   i <- 0
   for(imp_df in df_list){
     i <- i + 1
-    result_list[[i]] <- method(formula = formula, data = imp_df, ...)
+    if(na.rm){
+      result_list[[i]] <- method(formula = formula, data = na.omit(imp_df, cols = cols), ...)
+    }else{result_list[[i]] <- method(formula = formula, data = imp_df, ...)}
   }
   
   result_list
