@@ -11,14 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Loading the require libraries, functions and data:
 ```{r}
-sure_path <- getwd()
+sure_path <- "/Users/shiva/code/CMU/sure2018"
 load(paste(sure_path, "/data/mice_new_obj_marginal.Rdata", sep = ""))
 library(tidyverse)
 library(rpart)
 library(caret)
 library(ResourceSelection)
+library(randomForest)
 source(paste(sure_path, "/functions/mice_glm_function.R", sep = ""))
 source(paste(sure_path, "/functions/beta_functions.R", sep = ""))
+source('~/code/CMU/sure2018/functions/roc_functions.R')
 ```
 
 Grabbing the imputed datasets from the mice new object:
@@ -30,23 +32,32 @@ working_mno <- mice_new_obj_marginal
 
 working_mno <- bind_country_cols(working_mno, 10, 5, sure_path = sure_path)
 
+for(i in 1:5){
+  working_mno[["data_list"]][[10]][[i]][["data_corrected"]][["isForcedLabour"]] <-
+    working_mno[["data_list"]][[10]][[i]][["data"]][["isForcedLabour"]]
+  working_mno[["data_list"]][[10]][[i]][["data_corrected"]][["isSexualExploit"]] <-
+    working_mno[["data_list"]][[10]][[i]][["data"]][["isSexualExploit"]]
+}
+
 data_list <- mice_sep(working_mno, 10, 5, stratify = TRUE, 
                       strat_vars = c("gender", "ageBroad", "Country_of_Exploit_2L",
                                      "Country_of_Citizenship_2L"))
+
 #Building a composite variable LabourOrSex from isForcedLabour and isSexualExploit
 #A 1 corresponds to Forced Labour and 0 to Sexual Exploitation
-for(set in c("training", "test")){
-  for(i in 1:5){
-    holder_df <- data_list[["data_corrected"]][[set]][[i]]
-    
-    holder_df$LabourOrSex <- NA
-    
-    holder_df[holder_df$isForcedLabour == 1 & !is.na(holder_df$isForcedLabour),"LabourOrSex"] <- TRUE
-    holder_df[holder_df$isSexualExploit == 1 & !is.na(holder_df$isSexualExploit),"LabourOrSex"] <- FALSE
-    holder_df[,"LabourOrSex"] <- as.factor(unlist(holder_df[,"LabourOrSex"])*1)
-    data_list[["data_corrected"]][[set]][[i]] <- holder_df
-  }
-}
+# for(set in c("training", "test")){
+#   for(i in 1:5){
+#     holder_df <- data_list[["data"]][[set]][[i]]
+#     
+#     holder_df$LabourOrSex <- holder_df$isForcedLabour 
+#     
+#     
+#     holder_df[holder_df$isForcedLabour == 1 ,"LabourOrSex"] <- 2L
+#     holder_df[holder_df$isSexualExploit == 1,"LabourOrSex"] <- 1L
+#     holder_df[,"LabourOrSex"] <- as.factor(unlist(holder_df[,"LabourOrSex"])*1)
+#     data_list[["data_corrected"]][[set]][[i]] <- holder_df
+#   }
+# }
 ```
 
 ## Creating the regression formulas
@@ -111,13 +122,6 @@ glm_sex_list <- mno_regression(data_list[["data_corrected"]][["training"]],
 glm_sex_interaction_list <- mno_regression(data_list[["data_corrected"]][["training"]], 
                            imp_formula_sex_interaction, glm, family = "binomial")
 
-#The LabourOrSex composite variable
-glm_comp_list <- mno_regression(data_list[["data_corrected"]][["training"]], 
-                           imp_formula_comp, glm, family = "binomial")
-
-glm_comp_interaction_list <- mno_regression(data_list[["data_corrected"]][["training"]], 
-                           imp_formula_comp_interaction, glm, family = "binomial")
-
 ```
 
 ### Evaluating the models
@@ -127,19 +131,54 @@ Looking at the Forced Labour model
 labour_betas <- beta_matrix(glm_labour_list)
 
 #Visualizing the beta matrix
-vis_beta_mat(labour_betas)
-
+vis_beta_mat(labour_betas[,1:5])
 #and getting approximating the variance in the parameters due to imputation
-labour_betas_variance <- apply(betas, MARGIN = 2, var)
+labour_betas_variance <- apply(labour_betas, MARGIN = 2, var)
 
-#build ROC Curves for each model
-roc_labour_list <- list()
+#build ROC Curves for each labour model
+labour_roc_df_list <- list()
 for(i in 1:length(glm_labour_list)){
-  roc_labour_list[[i]] <-
-    pROC::roc(data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]],
-                        predict(glm_labour_list[[i]], type = "response", 
-                                newdata = data_list[["data_corrected"]][["test"]][[i]]))
+  labour_roc_df_list[[as.character(i)]][["prob"]] <- predict(glm_labour_list[[1]], 
+                                                    type = "response",
+                                                    newdata = data_list[["data_corrected"]][["test"]][[i]])
+  
+labour_roc_df_list[[as.character(i)]][["labels"]] <- data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]]
+  
+  labour_roc_df_list[[as.character(i)]][["prob"]] <-
+    labour_roc_df_list[[as.character(i)]][["prob"]][!is.na(labour_roc_df_list[[as.character(i)]][["labels"]])]
+  
+  labour_roc_df_list[[as.character(i)]][["labels"]] <-
+    labour_roc_df_list[[as.character(i)]][["labels"]][!is.na(labour_roc_df_list[[as.character(i)]][["labels"]])]
 }
+labour_roc_df <- create_roc_df(labour_roc_df_list)
+
+vis_roc_df(labour_roc_df)
+
+
+#build ROC Curve for labour interaction model
+labour_interaction_roc_df_list <- list()
+for(i in 1:length(glm_labour_interaction_list)){
+  labour_interaction_roc_df_list[[as.character(i)]][["prob"]] <- predict(glm_labour_interaction_list[[1]], 
+                                                    type = "response",
+                                                    newdata = data_list[["data_corrected"]][["test"]][[i]])
+  
+labour_interaction_roc_df_list[[as.character(i)]][["labels"]] <- data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]]
+  
+  labour_interaction_roc_df_list[[as.character(i)]][["prob"]] <-
+    labour_interaction_roc_df_list[[as.character(i)]][["prob"]][!is.na(labour_interaction_roc_df_list[[as.character(i)]][["labels"]])]
+  
+  labour_interaction_roc_df_list[[as.character(i)]][["labels"]] <-
+    labour_interaction_roc_df_list[[as.character(i)]][["labels"]][!is.na(labour_interaction_roc_df_list[[as.character(i)]][["labels"]])]
+}
+labour_interaction_roc_df <- create_roc_df(labour_interaction_roc_df_list)
+
+vis_roc_df(labour_roc_df)
+vis_roc_df(labour_interaction_roc_df)
+
+hoslem.test(data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]],
+              predict(glm_labour__list[[1]], type = "response", 
+                      newdata = data_list[["data_corrected"]][["test"]][[1]])) %>%
+    print
 
 for(i in 1:length(glm_labour_list)){
   cat("Holsem GOF test for the", i, "th imputation")
@@ -156,7 +195,7 @@ labour_interaction_betas <- beta_matrix(glm_labour_interaction_list)
 vis_beta_mat(labour_interaction_betas)
 
 #and getting approximating the variance in the parameters due to imputation
-labour_interaction_betas_variance <- apply(betas, MARGIN = 2, var)
+labour_interaction_betas_variance <- apply(labour_interaction_betas, MARGIN = 2, var)
 
 #build ROC Curves for each model
 roc_labour_interaction_list <- list()
@@ -166,12 +205,14 @@ for(i in 1:length(glm_labour_interaction_list)){
                         predict(glm_labour_interaction_list[[i]], type = "response", 
                                 newdata = data_list[["data_corrected"]][["test"]][[i]]))
 }
-
+for(i in 1:length(glm_labour_interaction_list)){
+  pROC::auc(roc_labour_interaction_list[[i]]) %>% print
+}
 for(i in 1:length(glm_labour_interaction_list)){
   cat("Holsem GOF test for the", i, "th imputation")
-  hoslem.test(data_list[["data_corrected"]][["test"]][[i]][["isForcedLabour"]],
+  hoslem.test(data_list[["data_corrected"]][["training"]][[i]][["isForcedLabour"]],
               predict(glm_labour_interaction_list[[i]], type = "response", 
-                      newdata = data_list[["data_corrected"]][["test"]][[i]])) %>%
+                      newdata = data_list[["data_corrected"]][["training"]][[i]])) %>%
     print
 }
 ```
@@ -185,7 +226,7 @@ sex_betas <- beta_matrix(glm_sex_list)
 vis_beta_mat(sex_betas)
 
 #and getting approximating the variance in the parameters due to imputation
-sex_betas_variance <- apply(betas, MARGIN = 2, var)
+sex_betas_variance <- apply(sex_betas, MARGIN = 2, var)
 
 #build ROC Curves for each model
 roc_sex_list <- list()
@@ -211,7 +252,7 @@ sex_interaction_betas <- beta_matrix(glm_sex_interaction_list)
 vis_beta_mat(sex_interaction_betas)
 
 #and getting approximating the variance in the parameters due to imputation
-sex_interaction_betas_variance <- apply(betas, MARGIN = 2, var)
+sex_interaction_betas_variance <- apply(sex_interaction_betas, MARGIN = 2, var)
 
 #build ROC Curves for each model
 roc_sex_interaction_list <- list()
@@ -231,58 +272,39 @@ for(i in 1:length(glm_sex_interaction_list)){
 }
 ```
 
-Looking at the Composite Variable model
+##Hypothesis Testing
 ```{r}
-##The model without interactions
-comp_betas <- beta_matrix(glm_comp_list)
+slim_formula_exp <- paste("isForcedLabour ~ gender*ageBroad", citz_features, exp_features,
+                       meansOfControl, migration, populationgroup, RecruiterRelationship,
+                      sep = " + ") %>% gsub(pattern = "(\\ \\+\\ Exp_Tier)", replacement = "") %>%
+      as.formula()
 
-#Visualizing the beta matrix
-vis_beta_mat(comp_betas)
+slim_formula_citz <- paste("isForcedLabour ~ gender*ageBroad", citz_features, exp_features,
+                       meansOfControl, migration, populationgroup, RecruiterRelationship,
+                      sep = " + ") %>% gsub(pattern = "(\\ \\+\\ Citz_Tier)", replacement = "") %>%
+      as.formula()
 
-#and getting approximating the variance in the parameters due to imputation
-comp_betas_variance <- apply(comp_betas, MARGIN = 2, var)
+slim_glm_exp <- glm(slim_formula_exp, family = "binomial", 
+                    data = data_list[["data_corrected"]][["training"]][[1]])
+anova(slim_glm_exp, glm_labour_interaction_list[[1]], test = "LRT")
 
-#build ROC Curves for each model
-roc_comp_list <- list()
-for(i in 1:length(glm_comp_list)){
-  roc_comp_list[[i]] <-
-    pROC::roc(data_list[["data_corrected"]][["test"]][[i]][["LabourOrSex"]],
-                        predict(glm_comp_list[[i]], type = "response", 
-                                newdata = data_list[["data_corrected"]][["test"]][[i]]))
-}
 
-for(i in 1:length(glm_comp_list)){
-  cat("Holsem GOF test for the", i, "th imputation")
-  hoslem.test(data_list[["data_corrected"]][["test"]][[i]][["LabourOrSex"]],
-              predict(glm_comp_list[[i]], type = "response", 
-                      newdata = data_list[["data_corrected"]][["test"]][[i]])) %>%
-    print
-}
+slim_glm_citz <- glm(slim_formula_citz, family = "binomial", 
+                    data = data_list[["data_corrected"]][["training"]][[1]])
 
-##The model with interaction 
-comp_interaction_betas <- beta_matrix(glm_comp_interaction_list)
+anova(slim_glm_citz, glm_labour_interaction_list[[i]], test = "LRT")
 
-#Visualizing the beta matrix
-vis_beta_mat(comp_interaction_betas)
-
-#and getting approximating the variance in the parameters due to imputation
-comp_interaction_betas_variance <- apply(betas, MARGIN = 2, var)
-
-#build ROC Curves for each model
-roc_comp_interaction_list <- list()
-for(i in 1:length(glm_comp_interaction_list)){
-  roc_comp_interaction_list[[i]] <-
-    pROC::roc(data_list[["data_corrected"]][["test"]][[i]][["LabourOrSex"]],
-                        predict(glm_comp_interaction_list[[i]], type = "response", 
-                                newdata = data_list[["data_corrected"]][["test"]][[i]]))
-}
-
-for(i in 1:length(glm_comp_interaction_list)){
-  cat("Holsem GOF test for the", i, "th imputation")
-  hoslem.test(data_list[["data_corrected"]][["test"]][[i]][["LabourOrSex"]],
-              predict(glm_comp_interaction_list[[i]], type = "response", 
-                      newdata = data_list[["data_corrected"]][["test"]][[i]])) %>%
-    print
+#Sequential Hypothesis testing for each model:
+for(i in 1:5){
+  slim_glm_exp <- glm(slim_formula_exp, family = "binomial", 
+                    data = data_list[["data_corrected"]][["training"]][[i]])
+  anova(slim_glm_exp, glm_labour_interaction_list[[i]], test = "LRT") %>% print()
+  
+  slim_glm_citz <- glm(slim_formula_citz, family = "binomial", 
+                    data = data_list[["data_corrected"]][["training"]][[i]])
+  anova(slim_glm_citz, glm_labour_interaction_list[[i]], test = "LRT") %>% print()
+  
+  coef(summary(glm_labour_interaction_list[[i]]))[c(15:16, 24:25, 47:49),] %>% print()
 }
 ```
 
@@ -290,20 +312,29 @@ for(i in 1:length(glm_comp_interaction_list)){
 Warning this chunk takes a while. Each loop took about an hour and a half running from 
 R Console on my computer
 ```{r}
-
-
-step_labour_interaction <- list()
-i <- 0
-for(imp_df in data_list[["data_corrected"]][["training"]]){
-  i <- i + 1
-  full_glm <- glm(formula = imp_formula_labour_interaction, data = imp_df, family = binomial)
-  step_labour_interaction[[i]] <- step(full_glm, direction = "both")
-}
-save(step_labour_interaction, paste())
+# step_labour_interaction <- list()
+# i <- 0
+# for(imp_df in data_list[["data_corrected"]][["training"]]){
+#   i <- i + 1
+#   full_glm <- glm(formula = imp_formula_labour_interaction, data = imp_df, family = binomial)
+#   step_labour_interaction[[i]] <- step(full_glm, direction = "both")
+# }
+# save(step_labour_interaction, file = paste(sure_path,
+#                                            "/data/step_labour_interaction.Rdata", sep = ""))
+# 
+# step_comp_interaction <- list()
+# i <- 0
+# for(imp_df in data_list[["data_corrected"]][["training"]]){
+#   i <- i + 1
+#   full_glm <- glm(formula = imp_formula_comp_interaction, data = imp_df, family = binomial)
+#   step_labour_interaction[[i]] <- step(full_glm, direction = "both")
+# }
+# save(step_comp_interaction, file = paste(sure_path,
+#                                            "/data/step_labour_interaction.Rdata", sep = ""))
 ```
 
 #Classification Trees
-
+##CART:
 ###The models using isForcedLabour as response variable
 ```{r}
 tree_labour_list <- mno_regression(data_list[["data_corrected"]][["training"]], 
@@ -325,7 +356,7 @@ tree_sex_list <- mno_regression(data_list[["data_corrected"]][["training"]],
 caret::confusionMatrix(predict(tree_sex_list[[1]], 
                                newdata = data_list[["data_corrected"]][["test"]][[1]], 
                                type = "class"), 
-                       data_list[["data_corrected"]][["test"]][[1]][["isForcedLabour"]])
+                       data_list[["data_corrected"]][["test"]][[1]][["isSexualExploit"]])
 ```
 
 ###The model using the composite variable as response variable
@@ -339,4 +370,24 @@ caret::confusionMatrix(predict(tree_comp_list[[1]],
                                type = "class"), 
                        data_list[["data_corrected"]][["test"]][[1]][["isForcedLabour"]])
 ```
+
+
+##Random Forest
+###The models using isForcedLabour as response variable
+```{r}
+
+
+rf_labour <- mno_regression(data_list[["data_corrected"]][["training"]], imp_formula_labour,
+                            randomForest, na.rm = TRUE, cols = "isForcedLabour")
+
+```
+
+
+###The models using isSexualExploit as response variable
+```{r}
+rf_sex <- mno_regression(data_list[["data_corrected"]][["training"]], imp_formula_sex,
+                            randomForest, na.rm = TRUE, cols = "isSexualExploit")
+```
+
+
 

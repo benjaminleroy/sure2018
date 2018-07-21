@@ -9,8 +9,8 @@ create_roc_df <- function(info_list) {
 
 	for (model in names(info_list)) {
 		pred <- ROCR::prediction(
-  					predictions = prob_not_u_is_1,
-    				labels = truth_not_u_is_1)
+  					predictions = info_list[[model]]$prob,
+    				labels = info_list[[model]]$labels)
 		pref <- ROCR::performance(pred, measure = "tpr", x.measure = "fpr")
 		df_inner <- data.frame(x = pref@x.values[[1]],
 							   y = pref@y.values[[1]],
@@ -27,7 +27,7 @@ create_roc_df <- function(info_list) {
 vis_roc_df <- function(roc_df){
 	ggout <- ggplot(roc_df,aes(x = x,y = y, color = model)) + 
 	geom_line() + 
-	geom_segment(data = data.frame(x = c(0,1), y = c(0,1)),
+	geom_path(data = data.frame(x = c(0,1), y = c(0,1)),
 				 aes(x = x, y = y), linetype = "dashed",
 				 color = "black") +
  	labs(x = "False Positive Rate", 
