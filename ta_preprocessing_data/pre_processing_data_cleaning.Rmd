@@ -1,0 +1,1380 @@
+---
+title: "Human Trafficking Pre Processing"
+author: "Benjamin LeRoy"
+date: "5/21/2018"
+output: html_document
+---
+```{r echo = F}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Where the data comes from:
+
+
+Besides the initial data source (which comes from the [Counter-Trafficking Data Collaborative](https://www.ctdatacollaborative.org/download-global-dataset)), I've collected data from tghe following sources:
+
++ **Tiers**
+from [wikipedia](https://en.wikipedia.org/wiki/Trafficking_in_Persons_Report) for '11 to '17 and the state department website for '02 to '10 (['02](https://www.state.gov/j/tip/rls/tiprpt/2002/10678.htm), ['03](https://www.state.gov/j/tip/rls/tiprpt/2003/21262.htm#tiers),
+['04](https://www.state.gov/j/tip/rls/tiprpt/2004/33187.htm),
+['05](https://www.state.gov/j/tip/rls/tiprpt/2005/46610.htm), 
+['06](https://www.state.gov/j/tip/rls/tiprpt/2006/65985.htm),
+['07]("https://www.state.gov/j/tip/rls/tiprpt/2007/82802.htm),
+['08](https://www.state.gov/j/tip/rls/tiprpt/2008/105383.htm),
+['09](https://www.state.gov/j/tip/rls/tiprpt/2009/123132.htm),
+['10](https://www.state.gov/j/tip/rls/tiprpt/2010/142755.htm))
++ **Poverty** 
+from the [UN](http://data.un.org/Data.aspx?q=poverty&d=MDG&f=seriesRowID%3a581). Sparsity in when estimated/ recorded
++ **GDP per capita** 
+from the [World Bank](https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?end=2016&locations=AF-ZM-XD&name_desc=false&start=1960)
++ **Women Status**
+from [Wikipedia](https://en.wikipedia.org/wiki/Global_Gender_Gap_Report) from the World Economic Forum
++ **Peace**
+from [wikipedia](https://en.wikipedia.org/wiki/Global_Peace_Index) from the Institute for Economics and Peace.
++ **Organized Crime and Bribes** from the [World Economic Forum](http://reports.weforum.org/global-competitiveness-index-2017-2018/downloads/), actually a measure of these effecting business practices.
++ **Immigration** from the [UN](http://www.un.org/en/development/desa/population/migration/data/estimates2/estimates17.shtml)
++ **Country Population** from the [UN](https://esa.un.org/unpd/wpp/DataQuery/) - Total Population by sex (thousands). Only every 5 years...
+
+
+
+# Individual Database 
+
+This data was downloaed from [Counter-Trafficking Data Collaborative](https://www.ctdatacollaborative.org/download-global-dataset) in the end of May, 2018.
+
+```{r echo = F, message = F, warning = F}
+library(tidyverse)
+human_trafficking <- read_csv("The Global Dataset 27 Nov 2017_0.csv") 
+
+human_trafficking <- human_trafficking[,-1]
+human_trafficking$citizenship[human_trafficking$citizenship == "-99"] = "Missing"
+human_trafficking$citizenship[human_trafficking$citizenship == "ZZ"] = "Unknown"
+human_trafficking$CountryOfExploitation[human_trafficking$CountryOfExploitation == "-99"] = "Missing"
+human_trafficking$CountryOfExploitation[human_trafficking$CountryOfExploitation == "ZZ"] = "Unknown"
+human_trafficking$CountryOfExploitation[human_trafficking$CountryOfExploitation == "Y1"] = "LT" # not sure
+human_trafficking[human_trafficking == -99] <- NA
+```
+
+Note that on the [website](https://www.ctdatacollaborative.org/story/exploitation-victims-trends) the data is from has more visuals in these low dimensions.
+
+# Country Based Datasets
+
+This section contains scrapping of websites online, which was done in May of 2018.
+
+## Tiers
+
+```{r}
+library(rvest)
+tierURL <- "https://en.wikipedia.org/wiki/Trafficking_in_Persons_Report"
+temp <- tierURL %>% 
+  read_html %>%
+  rvest::html_nodes("table")
+
+#html_table(temp[1]) ## Just the "legend" table
+tier_table <- html_table(temp[2])[[1]] ## The table you're interested in
+```
+
+### Country Codes
+
+```{r}
+countryURL <- "https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2"
+temp <- countryURL %>% 
+  read_html %>%
+  rvest::html_nodes("table")
+
+citizenship_table <- html_table(temp[3])[[1]] ## Just the "legend" table
+```
+
+
+```{r}
+# tiers
+
+tiers <- list()
+
+website_state_tiers <- c(
+"https://www.state.gov/j/tip/rls/tiprpt/2002/10678.htm", # 2002 
+# 2003 
+"https://www.state.gov/j/tip/rls/tiprpt/2003/21262.htm#tiers", # 2003
+"https://www.state.gov/j/tip/rls/tiprpt/2004/33187.htm", # 2004 
+"https://www.state.gov/j/tip/rls/tiprpt/2005/46610.htm", # 2005 
+# 2006 "https://www.state.gov/j/tip/rls/tiprpt/2006/65985.htm # no tables :(
+"https://www.state.gov/j/tip/rls/tiprpt/2007/82802.htm", # 2007 
+"https://www.state.gov/j/tip/rls/tiprpt/2008/105383.htm", # 2008 
+"https://www.state.gov/j/tip/rls/tiprpt/2009/123132.htm", # 2009 
+"https://www.state.gov/j/tip/rls/tiprpt/2010/142755.htm" # 2010 
+)
+```
+
+```{r eval =F}
+# 2002
+tURL <- website_state_tiers[1]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+year <- 2002
+tiers[[year]] <- list()
+tiers[[year]][["1"]] = as.vector(as.matrix(tabs[[1]]))
+tiers[[year]][["2"]] = as.vector(as.matrix(tabs[[2]]))
+tiers[[year]][["3"]] = as.vector(as.matrix(tabs[[3]]))
+```
+
+```{r}
+# 2003
+tURL <- website_state_tiers[2]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+year <- 2003
+tiers[[year]] <- list()
+tiers[[year]][["1"]] <- as.vector(as.matrix(tabs[[13]]))
+tiers[[year]][["2"]] <- as.vector(as.matrix(tabs[[14]]))
+tiers[[year]][["3"]] <- as.vector(as.matrix(tabs[[15]]))
+```
+
+```{r}
+# 2004
+tURL <- website_state_tiers[3]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+year <- 2004
+tiers[[year]] <- list()
+tiers[[year]][["1"]] <- as.vector(as.matrix(tabs[[1]]))
+tiers[[year]][["2"]] <- as.vector(as.matrix(tabs[[2]]))
+tiers[[year]][["2w"]] <- as.vector(as.matrix(tabs[[3]]))
+tiers[[year]][["3"]] <- as.vector(as.matrix(tabs[[4]]))
+```
+
+```{r}
+# 2005
+tURL <- website_state_tiers[4]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+
+year <- 2005
+tiers[[year]] <- list()
+tiers[[year]][["1"]] <- as.vector(as.matrix(tabs[[1]][3:8, ]))
+tiers[[year]][["2"]] <- as.vector(as.matrix(tabs[[1]][12:31,]))
+tiers[[year]][["2w"]] <- as.vector(as.matrix(tabs[[1]][35:41,]))
+tiers[[year]][["3"]] <- as.vector(as.matrix(tabs[[1]][45:48,]))
+```
+
+```{r}
+# 2006:
+# had to enter values in manually - not easy scrapping from image on website.
+year <- 2006
+tiers[[year]] <- list()
+
+tiers[[year]][["1"]] <- c(tiers[[2005]][["1"]][-c(6,15,20)], 
+                         "FINLAND", "IRELAND", "MALAWI",
+                         "SINGAPORE","SWITZERLAND")
+tiers[[year]][["2"]] <- c(tiers[[2005]][["2"]][-c(3,5,9, 19,21, 23,26,34,
+                                                 35,36,39,44,47,48, 50, 
+                                                 55,59, 63, 66,67)], 
+                         "AZERBAIJAN","BENIN","CAMEROON", "CZECH REPUBLIC",
+                         "DOMINICAN REP.","ECUADOR", "THE GAMBIA", "GREECE",
+                         "GUINEA-BISSAU", "JORDAN","MALTA", "MAURITIUS",
+                         "NEPAL","NICARAGUA", "NIGER", "PHILIPPINES",
+                         "PORTUGAL", "RWANDA","SIERRA LEONE",
+                         "SLOVAK REPUBLIC", "SURINAME","TUNISIA","UKRAINE")
+tiers[[year]][["2w"]] <- c(tiers[[2005]][["2w"]][-c(2,4,5,6,8,9,10,11,12,14,
+                                                  16:18,20,21,22,24,
+                                                  25,26,27,28)], 
+                         "ALGERIA", "ARGENTINA", "BOLIVIA", "BRAZIL", 
+                         "CAMBODIA", "CENTRAL AFRICAN REP.","CYPRUS", 
+                         "DJIBOUTI","EGYPT", "EQUATORIAL GUINEA", 
+                         "INDONEISA", "ISREAL", "JAMAICA", "KENYA", 
+                         "KUWAIT", "LIBYA", "MACAU", "MALAYSIA", "OMAN",
+                         "PERU","QATAR", "TAIWAN","TOGO", 
+                         "UNITED ARAB EMIRATES")
+tiers[[year]][["3"]] <- c(tiers[[2005]][["3"]][-c(1,3,5:7, 9,12,13)],
+                          "BELIZE", "IRAN", "LAOS", "SYRIA", "UZBEKISTAN",
+                          "ZIMBABWE")
+```
+
+```{r}
+# 2007
+tURL <- website_state_tiers[5]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+
+year <- 2007
+tiers[[year]] <- list()
+tiers[[year]][["1"]] <- as.vector(as.matrix(tabs[[1]]))
+tiers[[year]][["2"]] <- as.vector(as.matrix(tabs[[2]]))
+tiers[[year]][["2w"]] <- as.vector(as.matrix(tabs[[3]]))
+tiers[[year]][["3"]] <- as.vector(as.matrix(tabs[[4]]))
+```
+
+
+```{r}
+# 2008
+tURL <- website_state_tiers[6]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+
+year <- 2008
+# had to enter values in manually - not easy scrapping from image on website.
+tiers[[year]] <- list()
+
+tiers[[year]] <- list()
+tiers[[year]][["1"]] = gsub(x = unlist(strsplit(
+                                    as.vector(as.matrix(tabs[[1]])),
+                                    split = "\n")), 
+                            pattern = " ",replacement =  "")
+tiers[[year]][["1"]][c(7,14,17, 32)] <- c("Czech Republic", "Hong Kong", 
+                                          "Korea, Rep. Of", "United Kingdom")
+tiers[[year]][["2"]] <- gsub(x = unlist(strsplit(
+                                      as.vector(as.matrix(tabs[[2]])),
+                                      split = "\n")), 
+                             pattern = " ",replacement =  "")
+tiers[[year]][["2"]][c(8, 16, 30, 58, 60, 73)] <- c("Bosnia & Herzegovina",
+                                                    "El Salvador",
+                                    "Kyrgyz Republic", "Sierra Leone",
+                                    "Slovak Republic",
+                                    "United Arab Emirates")
+tiers[[year]][["2w"]] <- gsub(x = unlist(strsplit(
+                                      as.vector(as.matrix(tabs[[3]])),
+                                      split = "\n")), 
+                              pattern = " ",replacement =  "")
+tiers[[year]][["2w"]][c(8, 10, 11,13,14,16,17,19,21,37,38)] <-
+  c("Central African Republic", "China (PRC)",
+    "Congo (DRC)", "Congo, Rep. Of",
+    "Costa Rica" ,"Cote d’Ivoire" ,
+    "Dominican Republic", "Equatorial Guinea",
+    "The Gambia" , "South Africa",
+    "Sri Lanka")
+tiers[[year]][["3"]] <-  gsub(x = unlist(strsplit(
+                                      as.vector(as.matrix(tabs[[4]])),
+                                      split = "\n")),
+                              pattern = " ",replacement =  "")
+tiers[[year]][["3"]][c(9,12,14)] <- c( "North Korea", "Papua New Guinea",
+                                       "Saudi Arabia")
+```
+
+```{r}
+# 2009
+tURL <- website_state_tiers[7]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+
+year <- 2009
+tiers[[year]] <- list()
+tiers[[year]][["1"]] <- as.vector(as.matrix(tabs[[1]]))
+tiers[[year]][["2"]] <- as.vector(as.matrix(tabs[[2]]))
+tiers[[year]][["2w"]] <- as.vector(as.matrix(tabs[[3]]))
+tiers[[year]][["3"]] <- as.vector(as.matrix(tabs[[4]]))
+
+```
+
+
+```{r}
+#2010
+tURL <- website_state_tiers[8]
+#tURL
+temp <- tURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+
+year <- 2010
+tiers[[year]] <- list()
+
+
+a <- tabs[[1]][,1:2]
+b <- tabs[[1]][,3:4]
+names(b) <- c("X1", "X2")
+full <- rbind(a,b)
+year = 2010
+tiers[[year]] <- list()
+tiers[[year]][["1"]] <- full$X1[full$X2 == "1"]
+tiers[[year]][["2"]] <- full$X1[full$X2 == "2"]
+tiers[[year]][["2w"]] <- full$X1[full$X2 == "2WL"]
+tiers[[year]][["3"]] <- full$X1[full$X2 == "3"]
+```
+
+## Cleaning up Tier data
+
+```{r}
+tiers_list <- list()
+for (year in 2002:2010) {
+  year_c <- as.character(year)
+  tiers_list[[year_c]] <- tiers[[year]]
+}
+
+
+base_names <- "ben"
+
+for(year in 2002:2010) {
+  year_c <- as.character(year)
+  for (tier_level in c("1", "2", "2w", "3")) {
+     base_names <- unique(c(base_names,
+                          toupper(tiers_list[[year_c]][[tier_level]])))
+  }
+  
+}
+
+base_names <- base_names[-1]
+
+base_names <- unique(c(toupper(tier_table$Country), base_names))
+
+raw_data <- data.frame(countries = base_names)
+
+
+tier_df_list <- list()
+
+for (year in 2002:2010) {
+  year_c <- as.character(year)
+  data_year <- data.frame(country = "ben", tier = "0")
+  for (tier_level in c("1", "2", "2w", "3")){
+    if (tier_level %in% names(tiers_list[[year_c]])) {
+    data_year <- rbind(data_year,
+      data.frame(country = toupper(tiers_list[[year_c]][[tier_level]]),
+                 tier = tier_level))
+    }
+  }
+  data_year <- data_year[-1,]
+  names(data_year) <- c("country", paste0("tier",year_c))
+  tier_df_list[[year_c]] <- data_year
+}
+
+for (year in 2002:2010) {
+  year_c <- as.character(year)
+  raw_data <- raw_data %>% left_join(tier_df_list[[year_c]],
+                                     by = c("countries" = "country"))
+}
+
+tier_table_combine <- tier_table[,-10]
+names(tier_table_combine) <- c("Country", "Location",
+                               paste0("tier20",11:17))
+
+raw_data <- raw_data %>% left_join(tier_table_combine %>% 
+                                     mutate(Country = toupper(Country)), 
+                                   by = c("countries" = "Country") )
+```
+
+
+```{r}
+raw_data <- raw_data %>% 
+  filter(!(countries %in% c("","TIER 1", "TIER 2",
+                            "TIER 3", "TIER 2 WATCH LIST")))
+```
+
+### Dealing with country name iregularities
+
+```{r}
+countries <- raw_data$countries
+
+# 2 observations:
+drop <- which(raw_data$countries %in% c("LAOS"))[1]
+raw_data <- raw_data[-drop,]
+drop <- which(raw_data$countries %in% c("TAIWAN"))[1]
+raw_data <- raw_data[-drop,]
+
+# multiple spellings
+mult_spell_list <- list()
+
+mult_spell_list[["ANTIGUA AND BARBUDA"]] = c("ANTIGUA & BARBUDA",
+                                           "ANTIGUA AND BARBUDA")
+
+mult_spell_list[["BOSNIA AND HERZEGOVINA"]] <- c("BOSNIA & HERZEGOVINA",
+                                               "BOSNIA & HERZEGOVNIA",
+                                               "BOSNIA AND HERZEGOVINA",
+                                               "BOSNIA/HERZ.",
+                                               "BOSNIA/HERZEGOVINA")
+
+mult_spell_list[["BURKINA FASO"]] = c("BURKINAFASO",
+                                           "BURKINA FASO")
+
+mult_spell_list[["CAMEROON FASO"]] = c("CAMEROON",
+                                           "CAMERON")
+
+mult_spell_list[["CENTRAL AFRICAN REPUBLIC"]] = c("CENTRAL AFRICAN REP .",
+                                                "CENTRAL AFRICAN REP.", 
+                                                "CENTRAL AFRICAN REPUBLIC")
+
+mult_spell_list[["CHINA"]] = c("CHINA",
+                             "CHINA (PRC)",
+                             "CHINA, PEOPLE'S REP. OF")
+
+mult_spell_list[["CONGO, THE DEMOCRATIC REPUBLIC OF THE"]] = c("CONGO (DRC)",
+                                          "CONGO, DEM. REP. OF",
+                                          "CONGO, DEMOCRATIC\nREPUBLIC OF THE")
+
+mult_spell_list[["CONGO"]] = c("CONGO (ROC)",
+                             "CONGO, REP. OF",
+                             "CONGO, REPUBLIC OF THE")
+
+mult_spell_list[["COTE D'IVOIRE"]] = c("COTE D'IVOIRE", 
+                                     "CÔTE D'IVOIRE",
+                                     "COTE D’IVOIRE")
+
+
+mult_spell_list[["DOMINICAN REPUBLIC"]] = c("DOMINICAN REP.",
+                                          "DOMINICAN REPUBLIC")
+
+mult_spell_list[["GUINEA-BISSAU"]] = c("GUINEA -BISSAU","GUINEA-BISSAU")
+
+
+mult_spell_list[["INDONESIA"]] = c("INDONEISA","INDONESIA")
+
+mult_spell_list[["ISRAEL"]] = c("ISRAEL", "ISREAL")
+
+mult_spell_list[["KOREA, DEMOCRATIC PEOPLE’S REPUBLIC OF"]] = c(
+  "KOREA, DEMOCRATIC\nPEOPLE’S REPUBLIC OF",
+  "KOREA , NORTH", "NORTH KOREA")
+
+
+mult_spell_list[["KOREA, REPUBLIC OF"]] = c("KOREA , SOUTH",
+                                          "KOREA, REP. OF", 
+                                          "KOREA, REPUBLIC OF", 
+                                          "REPUBLIC OF KOREA", 
+                                          "SOUTH KOREA")
+
+
+mult_spell_list[["KYRGYZSTAN"]] = c("KYRGYZ REPUBLIC",
+                                  "KYRGYZ REP.",
+                                  "KYRGYZSTAN")
+
+mult_spell_list[["MOLDOVA, REPUBLIC OF"]] = c("MOLDOVA", "MOLDOVA, REP.")
+
+
+mult_spell_list[["NEW ZEALAND"]] = c("NEW ZEALAND" = "NEWZEALAND")
+
+
+
+mult_spell_list[["SERBIA AND MONTENEGRO"]] = c("SERBIA & MONTENEGRO",
+                                               "SERBIA-MONTENEGRO")
+
+
+
+mult_spell_list[["SERBIA AND MONTENEGRO"]] = c("SERBIA & MONTENEGRO",
+                                               "SERBIA-MONTENEGRO")
+mult_spell_list[["SLOVAKIA"]] = c("SLOVAK REP.", "SLOVAK REPUBLIC")
+
+mult_spell_list[["SLOVAKIA"]] = c("SLOVAK REP.", "SLOVAK REPUBLIC")
+
+mult_spell_list[["SAINT VINCENT AND THE GRENADINES"]] = c(
+  "SAINT VINCENT\nAND THE GRENADINES", "ST. VINCENT & THE GREN.")
+
+mult_spell_list[["BAHAMAS"]] = c("BAHAMAS", "THE BAHAMAS")
+
+mult_spell_list[["GAMBIA"]] = c("GAMBIA", "THE GAMBIA")
+
+mult_spell_list[["UNITED ARAB EMIRATES"]] = c("UNITED ARAB EMIRATES",
+                                              "UNITEDARABEMIRATES")
+
+mult_spell_list[["UNITED ARAB EMIRATES"]] = c("UNITED ARAB EMIRATES",
+                                              "UNITEDARABEMIRATES")
+
+mult_spell_list[["MALDIVES"]] = c("MALDIVES",
+                                  "THE MALDIVES")
+
+mult_spell_list[["NETHERLANDS"]] = c("THE NETHERLANDS",
+                                     "NETHERLANDS")
+
+mult_spell_list[["NETHERLANDS ANTILLES"]] = c("THE NETH. ANTILLES",
+                                              "NETH. ANTILLES*")
+
+mult_spell_list[["TRINIDAD AND TOBAGO"]] = c("TRINIDAD & TOBAGO",
+                                             "TRINIDAD AND TOBAGO")
+
+
+for (country_name in names(mult_spell_list)) {
+  single <- apply(raw_data[raw_data$countries %in% 
+                             mult_spell_list[[country_name]],-1],
+                  2, function(x) max(x,na.rm = T))
+  single <- c(countries = country_name,single)
+  drop <- which(raw_data$countries %in% mult_spell_list[[country_name]])
+  raw_data <- raw_data[-drop,]
+  
+  raw_data  <- rbind(raw_data, single)
+
+}
+```
+
+
+```{r}
+ht2 <- ht2 %>% left_join(citizenship_table[,1:2], by = c("citizenship" = "Code"))
+
+#ht2 %>% names
+names(ht2)[59] = "Citizenship Country"
+ht2 <- ht2 %>% left_join(citizenship_table[,1:2], by = c("CountryOfExploitation" = "Code"))
+names(ht2)[60] = "Exploitation Country"
+```
+
+## GDP per capita
+
+```{r}
+# gdp
+gdp_per_capita <- read_csv("gdp_per_capita/API_NY.GDP.PCAP.CD_DS2_en_csv_v2_9908784.csv")
+#gdp_per_capita %>% head()
+```
+
+## Gender Inequality metric
+
+```{r}
+# gender inequality
+genderURL <- "https://en.wikipedia.org/wiki/Global_Gender_Gap_Report"
+temp <- genderURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+
+gender_gap <- tabs[[1]]
+column_names <- gender_gap[1,]
+column_names[12:13] <- c("2015","2016")
+gender_gap <- gender_gap[-1,]
+names(gender_gap) <- column_names
+```
+
+## Poverty
+
+```{r}
+poverty <- read_csv("MDG_Export_20180522_191642306.csv")
+
+
+poverty_df <- poverty %>% 
+  filter(
+    Series == "Population below national poverty line, total, percentage"
+    ) %>% 
+  select(Country,starts_with("19"), starts_with("20"))
+```
+
+## Peace Index
+
+One of the many data sets collected. Like the others, this shows a time series dimension of the index per country. Some data sets (like poverty) would require interpolation to remove NAs. Each data set also has different ranges.
+
+```{r}
+# peace
+peaceURL <- "https://en.wikipedia.org/wiki/Global_Peace_Index"
+temp <- peaceURL %>% 
+  read_html %>%
+  html_nodes("table")
+tabs <- html_table(temp, fill = TRUE)
+#tabs
+peace_df <- tabs[[2]]
+```
+
+```{r}
+library(reshape2)
+#https://idc9.github.io/stor390/notes/dplyr/dplyr.html
+peace_df <- peace_df %>% rename(`2017` = `2017 score[1]`,
+                    `2016` = `2016 score[57]`,
+                    `2015` = `2015 score[58]`,
+                    `2014` = `2014 score[59]`,
+                    `2013` = `2013 score[60]`,
+                    `2012` = `2012 score[61],[62]`,
+                    `2011` = `2011 score[63]`,
+                    `2010` = `2010 score[64]`,
+                    `2009` = `2009 score`,
+                    `2008` = `2008 score`)
+peace_df <- peace_df[, c("Country",paste0("200",8:9), paste0("20",10:17))]
+
+plot_peace <- peace_df %>% melt() %>% rename(year = variable, peace = value)
+```
+
+## Combining the above data sets
+
+```{r}
+# combining all
+tier_df <- raw_data 
+
+poverty_df_name_correct <- poverty_df
+names(poverty_df_name_correct)[2:30] <- paste0("poverty",
+                                               names(poverty_df)[2:30])
+gdp_per_capita_df <- gdp_per_capita
+names(gdp_per_capita_df)[5:62] = paste0("gdp_per_capita",names(gdp_per_capita)[5:62])
+
+
+together_df <- peace_df %>% mutate(Country = toupper(Country)) %>%
+  rename(peace2008 = `2008`,
+         peace2009 = `2009`,
+         peace2010 = `2010`,
+         peace2011 = `2011`,
+         peace2012 = `2012`,
+         peace2013 = `2013`,
+         peace2014 = `2014`,
+         peace2015 = `2015`,
+         peace2016 = `2016`,
+         peace2017 = `2017`
+         ) %>%
+  full_join(tier_df, by = c("Country" = "countries")) %>% 
+  full_join(poverty_df_name_correct %>% mutate(Country = toupper(Country)),
+            by = c("Country" = "Country")) %>% 
+  full_join(gender_gap %>%
+              mutate(Country = toupper(Country)) %>%
+              rename(gender2006 = `2006`,
+                     gender2007 = `2007`,
+                     gender2008 = `2008`,
+                     gender2009 = `2009`,
+                     gender2010 = `2010`,
+                     gender2011 = `2011`,
+                     gender2012 = `2012`,
+                     gender2013 = `2013`,
+                     gender2014 = `2014`,
+                     gender2015 = `2015`,
+                     gender2016 = `2016`,
+                     gender2017 = `2017`), by = c("Country" = "Country")) %>% 
+  full_join(gdp_per_capita_df %>%
+              mutate(`Country Name` = toupper(`Country Name`)), 
+            by = c("Country" = "Country Name")) 
+
+
+```
+
+
+```{r}
+missing_peace <- c()
+missing_tier <- c()
+missing_poverty <- c()
+missing_gender <- c()
+missing_gdp <- c()
+
+col_names <- names(together_df)
+
+for (row_idx in 1:nrow(together_df)) {
+  if (mean(is.na(together_df[row_idx, 
+                             grep(col_names,pattern = "peace")])) == 1) {
+    missing_peace <- c(missing_peace, row_idx)
+  }
+  if (mean(is.na(together_df[row_idx, 
+                             grep(col_names,pattern = "tier")])) == 1) {
+    missing_tier <- c(missing_tier, row_idx)
+  }
+  if (mean(is.na(together_df[row_idx, 
+                             grep(col_names,pattern = "poverty")])) == 1) {
+    missing_poverty <- c(missing_poverty, row_idx)
+  }
+  if (mean(is.na(together_df[row_idx, 
+                            grep(col_names,pattern = "gender")])) == 1) {
+    missing_gender <- c(missing_gender, row_idx)
+  }
+  if (mean(is.na(together_df[row_idx, 
+                            grep(col_names,pattern = "gdp_per_capita")])) == 1) {
+    missing_gdp <- c(missing_gdp, row_idx)
+  }
+}
+
+country_name_overlaps <- together_df$Country[unique(c(missing_peace,
+                                                      missing_tier,
+                                                      missing_poverty,
+                                                      missing_gender, 
+                                                      missing_gdp))]
+```
+
+### Dealing with duplicate countries with and different names for the same country
+
+```{r warning = F, message = F}
+together_df_clean <- together_df
+
+# duplicates
+duplicates <- c("NEW ZEALAND",
+"SLOVAKIA",
+"TANZANIA")
+
+for (country in duplicates) {
+  drop <- which(together_df_clean$Country %in% c(country))[1]
+  if (!is.null(drop)) {
+  together_df_clean <- together_df_clean[-drop,]
+  }
+}
+
+# Spelling
+mult_spell_merge_list <- list()
+mult_spell_merge_list[["BAHAMAS"]] <- c("BAHAMAS"," BAHAMAS, THE")
+mult_spell_merge_list[["CONGO"]] <- c("CONGO", "CONGO, REP.",
+                                      "REPUBLIC OF THE CONGO")
+mult_spell_merge_list[["CONGO, THE DEMOCRATIC REPUBLIC OF THE"]] <- 
+  c("CONGO, DEM. REP.", "CONGO, THE DEMOCRATIC REPUBLIC OF THE",
+    "DEMOCRATIC REPUBLIC OF THE CONGO")
+mult_spell_merge_list[["COTE D'IVOIRE"]] <- c("COTE D'IVOIRE", "CÔTE D'IVOIRE",
+                                              "IVORY COAST")
+mult_spell_merge_list[["CURACAO"]] <- c("CURACAO", "CURAÇAO")
+mult_spell_merge_list[["KOREA, DEMOCRATIC PEOPLE’S REPUBLIC OF"]] <- 
+  c("DPR KOREA", "NORTH KOREA", "KOREA, DEM. PEOPLE’S REP.", 
+    "KOREA, DEMOCRATIC PEOPLE'S REPUBLIC OF", 
+    "KOREA, DEMOCRATIC PEOPLE’S REPUBLIC OF")
+mult_spell_merge_list[["KOREA, REPUBLIC OF"]] <- c("KOREA REPUBLIC",
+                                                   "KOREA, REP.", 
+                                                   "KOREA, REPUBLIC OF", 
+                                                   "SOUTH KOREA")
+mult_spell_merge_list[["EGYPT"]] <- c("EGYPT", "EGYPT, ARAB REP.")
+mult_spell_merge_list[["MALVINAS"]] <- c("FALKLAND ISLANDS (MALVINAS)", 
+                                         "MALVINAS")
+mult_spell_merge_list[["GAMBIA"]] <- c("GAMBIA", "GAMBIA, THE")
+mult_spell_merge_list[["HONG KONG"]] <-
+  c("HONG KONG", "HONG KONG SAR, CHINA", 
+    "CHINA, HONG KONG SPECIAL ADMINISTRATIVE REGION")
+mult_spell_merge_list[["IRAN"]] <- c("IRAN", "IRAN (ISLAMIC REPUBLIC OF)",
+                                     "IRAN, ISLAMIC REP.")
+mult_spell_merge_list[["KYRGYZSTAN"]] <- c("KYRGYZ REPUBLIC", "KYRGYZSTAN")
+mult_spell_merge_list[["LAOS"]] <- c("LAO PDR",
+                                     "LAO PEOPLE'S DEMOCRATIC REPUBLIC", "LAOS")
+mult_spell_merge_list[["LIBYA"]] <- c("LIBYAN ARAB JAMAHIRIYA", "LIBYA")
+mult_spell_merge_list[["MACAO"]] <- 
+  c("MACAO SAR, CHINA", "MACAU", "CHINA, MACAO SPECIAL ADMINISTRATIVE REGION")
+mult_spell_merge_list[["MACEDONIA"]] <- c("MACEDONIA", "MACEDONIA, FYR")
+mult_spell_merge_list[["MICRONESIA"]] <- c("MICRONESIA", 
+                                           "MICRONESIA, FED. STS.",
+                                           "MICRONESIA, FEDERATED STATES OF")
+mult_spell_merge_list[["MOLDOVA"]] <- c("MOLDOVA", "MOLDOVA, REPUBLIC OF",
+                                        "REPUBLIC OF MOLDOVA")
+mult_spell_merge_list[["RUSSIA"]] <- c("RUSSIA", "RUSSIAN FEDERATION")
+mult_spell_merge_list[["SINT MAARTEN"]] <- c("SINT MAARTEN", 
+                                             "SINT MAARTEN (DUTCH PART)")
+mult_spell_merge_list[["PALESTINE"]] <- c("STATE OF PALESTINE", "PALESTINE",
+                                          "WEST BANK AND GAZA")
+mult_spell_merge_list[["SUDAN"]] <- c("SUDAN", "SUDAN (FORMER)")
+mult_spell_merge_list[["SYRIA"]] <- c("SYRIA", "SYRIAN ARAB REPUBLIC")
+mult_spell_merge_list[["VENEZUELA"]] <- c("VENEZUELA", "VENEZUELA, RB")
+mult_spell_merge_list[["VIETNAM"]] <- c("VIET NAM", "VIETNAM")
+mult_spell_merge_list[["YEMEN"]] <- c("YEMEN", "YEMEN, REP.")
+mult_spell_merge_list[["YUGOSLAVIA"]] <- 
+  c("YUGOSLAVIA", "YUGOSLAVIA [FORMER SOCIALIST FEDERAL REPUBLIC]")
+
+
+for (country_name in names(mult_spell_merge_list)) {
+  single <- apply(together_df_clean[together_df_clean$Country %in% mult_spell_merge_list[[country_name]],-1], 2, function(x) max(x,na.rm = T))
+  single <- c(Country = country_name,single)
+  drop <- which(together_df_clean$Country %in% mult_spell_merge_list[[country_name]])
+  together_df_clean <- together_df_clean[-drop,]
+  
+  together_df_clean  <- rbind(together_df_clean, single)
+
+}
+
+# Non Country
+drop_non_countries <- c("ARAB WORLD",
+"CENTRAL EUROPE AND THE BALTICS",
+"EARLY-DEMOGRAPHIC DIVIDEND",
+"EAST ASIA & PACIFIC",
+"EAST ASIA & PACIFIC (EXCLUDING HIGH INCOME)",
+"EAST ASIA & PACIFIC (IDA & IBRD COUNTRIES)",
+"EURO AREA",
+"EUROPE & CENTRAL ASIA",
+"EUROPE & CENTRAL ASIA (EXCLUDING HIGH INCOME)",
+"EUROPE & CENTRAL ASIA (IDA & IBRD COUNTRIES)",
+"EUROPEAN UNION",
+"EUROPEAN UNION (EU)",
+"FEDERAL REPUBLIC OF",
+"FRAGILE AND CONFLICT AFFECTED SITUATIONS",
+"HEAVILY INDEBTED POOR COUNTRIES (HIPC)",
+"HIGH INCOME",
+"IBRD ONLY",
+"IDA & IBRD TOTAL",
+"IDA BLEND",
+"IDA ONLY",
+"IDA TOTAL",
+"LATE-DEMOGRAPHIC DIVIDEND",
+"LATIN AMERICA & CARIBBEAN",
+"LATIN AMERICA & CARIBBEAN (EXCLUDING HIGH INCOME)",
+"LATIN AMERICA & THE CARIBBEAN (IDA & IBRD COUNTRIES)",
+"LEAST DEVELOPED COUNTRIES: UN CLASSIFICATION",
+"LOW & MIDDLE INCOME",
+"LOW INCOME",
+"LOWER MIDDLE INCOME",
+"MIDDLE EAST & NORTH AFRICA",
+"MIDDLE EAST & NORTH AFRICA (EXCLUDING HIGH INCOME)",
+"MIDDLE EAST & NORTH AFRICA (IDA & IBRD COUNTRIES)",
+"MIDDLE INCOME",
+"NORTH AMERICA",
+"NOT CLASSIFIED",
+"OECD MEMBERS",
+"OTHER SMALL STATES",
+"PACIFIC ISLAND SMALL STATES",
+"POST-DEMOGRAPHIC DIVIDEND",
+"PRE-DEMOGRAPHIC DIVIDEND",
+"SMALL STATES",
+"SOUTH ASIA",
+"SOUTH ASIA (IDA & IBRD)",
+"SUB-SAHARAN AFRICA",
+"SUB-SAHARAN AFRICA (EXCLUDING HIGH INCOME)",
+"SUB-SAHARAN AFRICA (IDA & IBRD COUNTRIES)",
+"UPPER MIDDLE INCOME",
+"WESTERN SAHARA",
+"WORLD")
+
+for (country in drop_non_countries) {
+  drop <- which(together_df_clean$Country %in% c(country))
+  together_df_clean <- together_df_clean[-drop,]
+}
+
+# Small Island
+drop_islands <- c("BRITISH VIRGIN ISLANDS",
+"CARIBBEAN SMALL STATES",
+"CAYMAN ISLANDS",
+"CHANNEL ISLANDS",
+"COOK ISLANDS",
+"FAEROE ISLANDS",
+"FAROE ISLANDS",
+"ISLE OF MAN",
+"MARSHALL ISLANDS",
+"REUNION",
+"SAINT HELENA",
+"SAINT KITTS AND NEVIS",
+"SAINT LUCIA",
+"SAINT PIERRE AND MIQUELON",
+"SAINT VINCENT AND THE GRENADINES",
+"SAO TOME AND PRINCIPE",
+"SOLOMON ISLANDS",
+"ST. KITTS AND NEVIS",
+"ST. LUCIA",
+"ST. MARTIN (FRENCH PART)",
+"ST. VINCENT AND THE GRENADINES",
+"UNITED STATES VIRGIN ISLANDS",
+"VIRGIN ISLANDS (U.S.)",
+"WALLIS AND FUTUNA ISLANDS")
+
+for (country in drop_islands) {
+  drop <- which(together_df_clean$Country %in% c(country))
+  together_df_clean <- together_df_clean[-drop,]
+}
+```
+
+## Organized Crime (effect on businesses)
+
+```{r}
+# (W.E.Forum: effect on businesses, pg 354 of report)
+#http://reports.weforum.org/global-competitiveness-index-2017-2018/downloads/
+business_related_data <- read_csv("GCI_Dataset_2007-2017.csv")
+
+c_name_b <- as.vector(business_related_data[1,])
+c_name_b_real <- names(c_name_b)
+naming_structure <- matrix(c(c_name_b_real,c_name_b),ncol = 2) %>% 
+  data.frame %>% apply(2, as.character) %>% data.frame %>% 
+  rename(Abb = X1, Country = X2) %>%
+  mutate(Abb = as.character(Abb),
+         Country = as.character(Country))
+
+
+business_related_data <- business_related_data[-1,]
+
+bribes <- business_related_data %>% filter(`Series code` == "1.05",
+                                 Attribute == "Value")
+organized_crime <- business_related_data %>% filter(`Series code` == "1.15",
+                                           Attribute == "Value")
+
+bribes_final <- cbind(bribes$Edition, 
+      bribes[,-c(1,2,3,4,5,6,7,8)] %>% 
+        apply(2, as.character) %>% 
+        apply(2, as.numeric) %>% 
+        data.frame) %>%
+  melt %>%
+  rename(Year = `bribes$Edition`,
+         Country_Abb = variable,
+         bribe_idx = value) %>%
+  mutate(Year = as.character(Year),
+         Country_Abb = as.character(Country_Abb)) %>% 
+  left_join(naming_structure,by = c("Country_Abb" = "Abb")) %>%
+  mutate(Year = fct_recode(Year, 
+                           "2017" = "2017-2018",
+                           "2016" = "2016-2017",
+                           "2015" = "2015-2016",
+                           "2014" = "2014-2015",
+                           "2013" = "2013-2014",
+                           "2012" = "2012-2013",
+                           "2011" = "2011-2012",
+                           "2010" = "2010-2011"))
+
+bribes_reorg <- data.frame(Country_Abb = unique(bribes_final$Country_Abb)) %>%
+  mutate(Country_Abb = as.character(Country_Abb))
+
+for (year in unique(bribes_final %>% pull(Year))) {
+  bribes_reorg <- bribes_reorg %>% left_join(bribes_final %>% 
+                                               filter(Year == year) %>%
+                                               select(Country_Abb, bribe_idx),
+                             by = c("Country_Abb" = "Country_Abb")) 
+  names(bribes_reorg)[names(bribes_reorg) == "bribe_idx"] = paste0("bribes",year)
+}
+               
+bribes_reorg <- bribes_reorg %>% left_join(naming_structure,
+                           by = c("Country_Abb" = "Abb"))
+
+
+organized_crime_final <- cbind(organized_crime$Edition, 
+                      organized_crime[,-c(1,2,3,4,5,6,7,8)] %>% 
+                        apply(2, as.character) %>% 
+                        apply(2, as.numeric) %>% 
+                        data.frame) %>% 
+  melt %>%
+  rename(Year = `organized_crime$Edition`,
+         Country_Abb = variable,
+         organized_crime_idx = value) %>%
+  mutate(Year = as.character(Year),
+         Country_Abb = as.character(Country_Abb)) %>% 
+  left_join(naming_structure,by = c("Country_Abb" = "Abb")) %>%
+  mutate(Year = fct_recode(Year, 
+                           "2017" = "2017-2018",
+                           "2016" = "2016-2017",
+                           "2015" = "2015-2016",
+                           "2014" = "2014-2015",
+                           "2013" = "2013-2014",
+                           "2012" = "2012-2013",
+                           "2011" = "2011-2012",
+                           "2010" = "2010-2011",
+                           "2009" = "2009-2010",
+                           "2008" = "2008-2009",
+                           "2007" = "2007-2008"))
+
+organized_crime_reorg <- data.frame(
+  Country_Abb = unique(organized_crime_final$Country_Abb)) %>%
+  mutate(Country_Abb = as.character(Country_Abb))
+
+for (year in unique(organized_crime_final %>% pull(Year))) {
+  organized_crime_reorg <- organized_crime_reorg %>% 
+                            left_join(organized_crime_final %>%
+                                        filter(Year == year) %>%
+                                        select(Country_Abb, organized_crime_idx),
+                             by = c("Country_Abb" = "Country_Abb")) 
+  names(organized_crime_reorg)[
+    names(organized_crime_reorg) == "organized_crime_idx"
+    ] <- paste0("organized_crime",year)
+}
+               
+organized_crime_reorg <- organized_crime_reorg %>% left_join(naming_structure,
+                           by = c("Country_Abb" = "Abb"))
+```
+
+## Bribes
+
+Copied in with `datapasta` library, then cleaned up.
+```{r}
+#(W.E.Forum: effect on businesses, pg 354 of report)
+# bribes:
+#http://reports.weforum.org/pdf/gci-2017-2018-scorecard/WEF_GCI_2017_2018_Scorecard_BRIBEIDX.pdf
+
+bribes <- c("1 Finland 6.8",
+  "2 New Zealand 6.7",
+  "3 Singapore 6.7",
+  "4 Iceland 6.6",
+  "5 Luxembourg 6.4",
+  "6 United Arab Emirates 6.4",
+  "7 Denmark 6.4",
+  "8 Switzerland 6.4",
+  "9 Hong Kong SAR 6.3",
+  "10 Norway 6.3",
+  "11 Qatar 6.3",
+  "12 Australia 6.2",
+  "13 Netherlands 6.2",
+  "14 Ireland 6.1",
+  "15 Japan 6.1",
+  "16 Estonia 6.1",
+  "17 United Kingdom 6.1",
+  "18 Sweden 6.0",
+  "19 Canada 6.0",
+  "20 Austria 5.9",
+  "21 Rwanda 5.7",
+  "22 Belgium 5.7",
+  "23 Israel 5.7",
+  "24 Taiwan, China 5.6",
+  "25 Bahrain 5.6",
+  "26 France 5.6",
+  "27 Chile 5.5",
+  "28 Uruguay 5.5",
+  "29 Germany 5.5",
+  "30 Georgia 5.4",
+  "31 Saudi Arabia 5.3",
+  "32 Brunei Darussalam 5.2",
+  "33 Oman 5.2",
+  "34 United States 5.2",
+  "35 Portugal 5.1",
+  "36 Slovenia 4.9",
+  "37 Lithuania 4.9",
+  "38 Bhutan 4.9",
+  "39 Malaysia 4.8",
+  "40 Poland 4.8",
+  "41 Spain 4.7",
+  "42 Jordan 4.7",
+  "43 Malta 4.7",
+  "44 Swaziland 4.7",
+  "45 Korea, Rep. 4.7",
+  "46 Czech Republic 4.7",
+  "47 Cyprus 4.6",
+  "48 Mauritius 4.6",
+  "49 China 4.5",
+  "50 Botswana 4.4",
+  "51 India 4.4",
+  "52 Italy 4.3",
+  "53 Turkey 4.3",
+  "54 Latvia 4.3",
+  "55 Costa Rica 4.3",
+  "56 Gambia, The 4.3",
+  "57 Egypt 4.2",
+  "58 Tajikistan 4.2",
+  "59 Hungary 4.2",
+  "60 Namibia 4.2",
+  "61 Armenia 4.1",
+  "62 Lao PDR 4.1",
+  "63 Azerbaijan 4.1",
+  "64 Cape Verde 4.1",
+  "65 Greece 4.0",
+  "66 Romania 4.0",
+  "67 Montenegro 4.0",
+  "68 Jamaica 3.9",
+  "69 Albania 3.9",
+  "70 Kuwait 3.9",
+  "71 Serbia 3.9",
+  "72 Thailand 3.8",
+  "73 Kazakhstan 3.8",
+  "74 Panama 3.8",
+  "75 Indonesia 3.8",
+  "76 Russian Federation 3.8",
+  "77 Croatia 3.8",
+  "78 Morocco 3.7",
+  "79 Slovak Republic 3.7",
+  "80 Guatemala 3.7",
+  "81 Mongolia 3.6",
+  "82 Senegal 3.6",
+  "83 Iran, Islamic Rep. 3.6",
+  "84 Seychelles 3.6",
+  "85 Liberia 3.5",
+  "86 Sri Lanka 3.5",
+  "87 Bulgaria 3.5",
+  "88 Tunisia 3.5",
+  "89 Peru 3.4",
+  "90 Bosnia and Herzegovina 3.4",
+  "91 South Africa 3.4",
+  "92 Algeria 3.4",
+  "93 Honduras 3.4",
+  "94 Kenya 3.4",
+  "95 Trinidad and Tobago 3.3",
+  "96 Colombia 3.3",
+  "97 Ecuador 3.3",
+  "98 Argentina 3.3",
+  "99 Zimbabwe 3.3",
+  "100 Tanzania 3.2",
+  "101 Ethiopia 3.2",
+  "102 Pakistan 3.2",
+  "103 Ghana 3.2",
+  "104 El Salvador 3.2",
+  "105 Mexico 3.2",
+  "106 Ukraine 3.2",
+  "107 Brazil 3.1",
+  "108 Malawi 3.1",
+  "109 Viet Nam 3.1",
+  "110 Zambia 3.1",
+  "111 Moldova 3.1",
+  "112 Burundi 3.1",
+  "113 Cambodia 3.0",
+  "114 Nicaragua 3.0",
+  "115 Uganda 3.0",
+  "116 Dominican Republic 3.0",
+  "117 Nepal 2.9",
+  "118 Philippines 2.9",
+  "119 Mozambique 2.9",
+  "120 Cameroon 2.9",
+  "121 Lebanon 2.8",
+  "122 Kyrgyz Republic 2.8",
+  "123 Paraguay 2.8",
+  "124 Nigeria 2.8",
+  "125 Sierra Leone 2.7",
+  "126 Bangladesh 2.5",
+  "127 Lesotho 2.5",
+  "128 Congo, Democratic Rep. 2.5",
+  "129 Madagascar 2.4",
+  "130 Benin 2.4",
+  "131 Mali 2.4",
+  "132 Venezuela 2.3",
+  "133 Haiti 2.3",
+  "134 Yemen 2.3",
+  "135 Mauritania 2.3",
+  "136 Guinea 2.3",
+  "137 Chad 2.1") %>% strsplit(split = " ") %>% 
+  sapply(FUN = function(x){return(x[-1])}) %>%
+  sapply(FUN = function(x){
+    l <- length(x)
+    return(c(paste(x[-l],collapse = " "),x[l]))
+  }) %>% t() %>%
+  data.frame() %>%
+  mutate(Year = 2017) %>%
+  rename(Country = X1,
+         Score = X2)
+
+head(bribes)
+
+#organized crime
+#http://reports.weforum.org/pdf/gci-2017-2018-scorecard/WEF_GCI_2017_2018_Scorecard_EOSQ035.pdf
+organized_crime <- c("1 Finland 6.8",
+                     "2 Norway 6.6",
+                     "3 Oman 6.6",
+                     "4 Iceland 6.5",
+                     "5 Singapore 6.4",
+                     "6 Qatar 6.4",
+                     "7 United Arab Emirates 6.4",
+                     "8 New Zealand 6.3",
+                     "9 Luxembourg 6.2",
+                     "10 Estonia 6.2",
+                     "11 Rwanda 6.1",
+                     "12 Switzerland 6.1",
+                     "13 Bhutan 6.0",
+                     "14 Lesotho 6.0",
+                     "15 Portugal 6.0",
+                     "16 Czech Republic 5.9",
+                     "17 Bahrain 5.8",
+                     "18 Brunei Darussalam 5.8",
+                     "19 Austria 5.7",
+                     "20 Malta 5.7",
+                     "21 Saudi Arabia 5.7",
+                     "22 Mauritius 5.7",
+                     "23 Netherlands 5.7",
+                     "24 Swaziland 5.7",
+                     "25 Sweden 5.6",
+                     "26 Hong Kong SAR 5.6",
+                     "27 Uruguay 5.5",
+                     "28 United Kingdom 5.5",
+                     "29 Ireland 5.5",
+                     "30 Australia 5.5",
+                     "31 Nicaragua 5.5",
+                     "32 Spain 5.5",
+                     "33 Latvia 5.5",
+                     "34 Lithuania 5.5",
+                     "35 Japan 5.4",
+                     "36 Slovenia 5.4",
+                     "37 Morocco 5.4",
+                     "38 Georgia 5.4",
+                     "39 Denmark 5.4",
+                     "40 Zimbabwe 5.4",
+                     "41 Jordan 5.4",
+                     "42 Belgium 5.3",
+                     "43 Azerbaijan 5.3",
+                     "44 Gambia, The 5.3",
+                     "45 Canada 5.2",
+                     "46 Chile 5.2",
+                     "47 Mongolia 5.2",
+                     "48 France 5.1",
+                     "49 Taiwan, China 5.1",
+                     "50 Algeria 5.1",
+                     "51 Israel 5.1",
+                     "52 Kuwait 5.1",
+                     "53 Botswana 5.1",
+                     "54 Poland 5.1",
+                     "55 Greece 5.1",
+                     "56 Hungary 5.1",
+                     "57 United States 5.0",
+                     "58 Malaysia 5.0",
+                     "59 Germany 5.0",
+                     "60 Egypt 5.0",
+                     "61 Tajikistan 5.0",
+                     "62 Armenia 5.0",
+                     "63 Kazakhstan 5.0",
+                     "64 Slovak Republic 5.0",
+                     "65 Lao PDR 5.0",
+                     "66 Korea, Rep. 5.0",
+                     "67 Croatia 4.9",
+                     "68 Panama 4.9",
+                     "69 Viet Nam 4.9",
+                     "70 Cyprus 4.8",
+                      "71 Romania 4.8",
+                      "72 Turkey 4.8",
+                      "73 Tanzania 4.8",
+                      "74 Costa Rica 4.7",
+                      "75 Sri Lanka 4.7",
+                      "76 Malawi 4.7",
+                      "77 Liberia 4.7",
+                      "78 Zambia 4.7",
+                      "79 China 4.6",
+                      "80 Seychelles 4.6",
+                      "81 Namibia 4.6",
+                      "82 Ghana 4.6",
+                      "83 Ecuador 4.5",
+                      "84 Ethiopia 4.5",
+                      "85 Senegal 4.5",
+                      "86 Russian Federation 4.5",
+                      "87 Cape Verde 4.5",
+                      "88 Congo, Democratic Rep. 4.4",
+                      "89 India 4.4",
+                      "90 Montenegro 4.4",
+                      "91 Iran, Islamic Rep. 4.3",
+                      "92 Albania 4.3",
+                      "93 Tunisia 4.3",
+                      "94 Moldova 4.3",
+                      "95 Mauritania 4.2",
+                      "96 Thailand 4.2",
+                      "97 Cambodia 4.2",
+                      "98 Bangladesh 4.2",
+                      "99 Nepal 4.2",
+                      "100 Paraguay 4.2",
+                      "101 Indonesia 4.2",
+                      "102 Kyrgyz Republic 4.2",
+                      "103 Benin 4.2",
+                      "104 Philippines 4.1",
+                      "105 Argentina 4.1",
+                      "106 Cameroon 4.1",
+                      "107 Serbia 4.1",
+                      "108 Sierra Leone 4.1",
+                      "109 Lebanon 4.0",
+                      "110 Nigeria 4.0",
+                      "111 Bosnia and Herzegovina 3.9",
+                      "112 Uganda 3.9",
+                      "113 Ukraine 3.9",
+                      "114 Trinidad and Tobago 3.9",
+                      "115 Dominican Republic 3.9",
+                      "116 Haiti 3.8",
+                      "117 Madagascar 3.8",
+                      "118 Burundi 3.8",
+                      "119 Bulgaria 3.7",
+                      "120 Kenya 3.7",
+                      "121 Brazil 3.6",
+                      "122 South Africa 3.6",
+                      "123 Italy 3.5",
+                      "124 Mali 3.4",
+                      "125 Mozambique 3.4",
+                      "126 Guinea 3.4",
+                      "127 Pakistan 3.3",
+                      "128 Yemen 3.3",
+                      "129 Peru 3.2",
+                      "130 Chad 3.1",
+                      "131 Colombia 2.9",
+                      "132 Jamaica 2.9",
+                      "133 Guatemala 2.7",
+                      "134 Mexico 2.6",
+                      "135 Venezuela 2.5",
+                      "136 Honduras 2.4",
+                      "137 El Salvador 1.5") %>% strsplit(split = " ") %>% 
+  sapply(FUN = function(x){return(x[-1])}) %>%
+  sapply(FUN = function(x){
+    l <- length(x)
+    return(c(paste(x[-l],collapse = " "),x[l]))
+  }) %>% t() %>%
+  data.frame() %>%
+  mutate(Year = 2017) %>%
+  rename(Country = X1,
+         Score = X2)
+
+head(organized_crime )
+
+#http://reports.weforum.org/global-competitiveness-index-2017-2018/downloads/
+business_related_data <- read_csv("GCI_Dataset_2007-2017.csv")
+head(business_related_data)
+
+c_name_b <- as.vector(business_related_data[1,])
+c_name_b_real <- names(c_name_b)
+naming_structure <- matrix(c(c_name_b_real,c_name_b),ncol = 2) %>% 
+  data.frame %>% apply(2, as.character) %>% data.frame %>% 
+  rename(Abb= X1, Country = X2) %>%
+  mutate(Abb = as.character(Abb),
+         Country = as.character(Country))
+
+
+business_related_data <- business_related_data[-1,]
+
+bribes <- business_related_data %>% filter(`Series code` == "1.05",
+                                 Attribute == "Value")
+organized_crime <- business_related_data %>% filter(`Series code` == "1.15",
+                                           Attribute == "Value")
+
+bribes_final <- cbind(bribes$Edition, 
+      bribes[,-c(1,2,3,4,5,6,7,8)] %>% 
+        apply(2, as.character) %>% 
+        apply(2, as.numeric) %>% 
+        data.frame) %>%
+  melt %>%
+  rename(Year = `bribes$Edition`,
+         Country_Abb = variable,
+         bribe_idx = value) %>%
+  mutate(Year = as.character(Year),
+         Country_Abb = as.character(Country_Abb)) %>% 
+  left_join(naming_structure,by = c("Country_Abb" = "Abb"))
+
+organized_crime_final <- cbind(organized_crime$Edition, 
+                      organized_crime[,-c(1,2,3,4,5,6,7,8)] %>% 
+                        apply(2, as.character) %>% 
+                        apply(2, as.numeric) %>% 
+                        data.frame) %>% 
+  melt %>%
+  rename(Year = `organized_crime$Edition`,
+         Country_Abb = variable,
+         organized_crime_idx = value) %>%
+  mutate(Year = as.character(Year),
+         Country_Abb = as.character(Country_Abb)) %>% 
+  left_join(naming_structure,by = c("Country_Abb" = "Abb"))
+```
+
+### Merging with previous data frame
+
+```{r}
+together_df_clean <- together_df_clean %>% 
+  left_join(bribes_reorg, 
+            by = c("Country Code" = "Country_Abb")) %>% 
+  left_join(organized_crime_reorg, by = c("Country Code" = "Country_Abb"))
+  
+
+together_df_clean <- together_df_clean[,
+                                       -which(names(together_df_clean) %in% 
+                                                c("Indicator Name", 
+                                                  "Indicator Code", 
+                                                  "Country", "X63"))]
+
+together_df_clean <- together_df_clean %>% select(Country.y,Country.x, 
+                                                  `Country Code`, Region, 
+                                                  Location, everything())
+
+write.csv(together_df_clean,file = "country_summary_dat.csv")
+```
+
+## Migration Data
+
+```{r}
+library(data.table)
+migration <- fread("UN_MigrantStockByOriginAndDestination_2017.csv")
+migration2 <- migration %>% select(-`Sort\rorder`, -Notes, -Code,
+                     -`Type of data (a)`, -Total, -`Other North`, 
+                     -`Other South`) %>% melt(id.vars = c("Year", 
+"Major area, region, country or area of destination")) 
+```
+
+# Population Data
+
+```{r}
+pop_total <- fread("TotalPopSex.csv",header = TRUE)
+pop_total <- pop_total %>% select(-Note, -Sex)
+pop_total <- pop_total %>% rename(pop1950 = `1950`,
+                           pop1955 = `1955`,
+                           pop1960 = `1960`,
+                           pop1965 = `1965`,
+                           pop1970 = `1970`,
+                           pop1980 = `1980`,
+                           pop1985 = `1985`,
+                           pop1990 = `1990`,
+                           pop1995 = `1995`,
+                           pop2000 = `2000`,
+                           pop2005 = `2005`,
+                           pop2010 = `2010`,
+                           pop2015 = `2015`)
+
+```
+
+
+# Saving
+
+```{r}
+write.csv(ht2,file = "individual_database.csv")
+write.csv(migration2, file = "migration.csv")
+write.csv(pop_total, file = "population.csv")
+```
+
